@@ -1,0 +1,14 @@
+version: '3'
+services:
+    web:
+        build: ./HappyWalker
+        command: python3 manage.py runserver 0.0.0.0:8000
+        ports:
+        - 8000:8000
+        volumes:
+        - ./HappyWalker:/data
+    db:
+        image: mongo
+        ports:
+        - 27017:27017
+
