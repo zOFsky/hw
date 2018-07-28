@@ -1,4 +1,5 @@
-FROM python
+FROM alpine
+RUN apk add python3
 RUN mkdir /data
 WORKDIR /data
 ADD requirements.txt /data
