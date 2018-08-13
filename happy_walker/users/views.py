@@ -38,20 +38,41 @@ class UserRegister(View):
         data_validator.allow_unknown = True
         data_validator(data)
 
-        #if there are errors we return them in response
         if data_validator.errors:
             errors_dict = {
-                'errors':[]
+                'errors': []
             }
+
             for key, value in data_validator.errors.items():
-                for error in value:
+                index = 0
+                for err in range(len(data_validator.document_error_tree[key].errors)):
                     errors_dict['errors'].append({
-                        key: error,
-                        "code": 'registration.incorrect_input'
-                        }
-                        )
-            #print("ERR_DICT: {}".format(errors_dict))
-            return JsonResponse(errors_dict, status=400)
+                        "field": key,
+                        "code": data_validator.document_error_tree[key].errors[index].rule,
+                        "message": value[index]
+                    })
+                    index += 1
+
+            # err = data_validator.document_error_tree['password']
+
+            return JsonResponse(errors_dict, status = 400)
+
+
+
+        # #if there are errors we return them in response
+        # if data_validator.errors:
+        #     errors_dict = {
+        #         'errors':[]
+        #     }
+        #     for key, value in data_validator.errors.items():
+        #         for error in value:
+        #             errors_dict['errors'].append({
+        #                 key: error,
+        #                 "code": 'registration.incorrect_input'
+        #                 }
+        #                 )
+        #     #print("ERR_DICT: {}".format(errors_dict))
+        #     return JsonResponse(errors_dict, status=400)
 
         if not(User.objects.filter(
              Q(username=data['username']) |
