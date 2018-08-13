@@ -8,7 +8,7 @@ from cerberus import Validator
 import re
 from django.db.models import Q
 import json
-
+from . import custom_validator as cv
 
 class UserRegister(View):
        
@@ -16,12 +16,13 @@ class UserRegister(View):
         'password': {
             'type': 'string', 
             'minlength': 6, 
-            'required': True
+            'empty': False
             },
         'email': {
             'required': True,
             'type': 'string', 
             'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+            'empty': False
             },
     }
     
@@ -32,34 +33,26 @@ class UserRegister(View):
         # Validating password and email using cerberus library
         # validation schema is coded in validation.py file
          
-        data_validator = Validator(self.validation_schema)
+        data_validator = Validator(self.validation_schema, 
+                                   error_handler=cv.CustomErrorHandler)
         data_validator.allow_unknown = True
         data_validator(data)
 
-        #if there are errors we return them in HttpResponse
+        #if there are errors we return them in response
         if data_validator.errors:
-            # errors_dict = {
-            #     'errors':[]
-            # }
-            # for key, value in data_validator.errors.items():
-            #    errors_dict['errors'].append({"message":key , "code": value[0]})
-            
-            # print("ERRORS: {}".format(data_validator.errors))
-            errors_list = '' 
+            errors_dict = {
+                'errors':[]
+            }
             for key, value in data_validator.errors.items():
-                errors_list += str(key) + " : "  + str(value) + " \n "
-            return HttpResponseBadRequest("HTTP_400_BAD_REQUEST \n " + errors_list)
+                for error in value:
+                    errors_dict['errors'].append({
+                        key: error,
+                        "code": 'registration.incorrect_input'
+                        }
+                        )
+            #print("ERR_DICT: {}".format(errors_dict))
+            return JsonResponse(errors_dict, status=400)
 
-            {
-    "errors": [
-        {"message": "everything failed!!11", "code": "registration.everything_failed"}
-    ]
-}
-
-
-        
-        # checking if username or email already exists
-        # if not we create and add to database new user
         if not(User.objects.filter(
              Q(username=data['username']) |
              Q(email=data['email'])
@@ -67,9 +60,9 @@ class UserRegister(View):
             User.objects.create_user(username=data['username'],email=data['email'], 
                 password=data['password'], first_name=data['firstname'],
                 last_name=data['lastname'])
-            return HttpResponse('HTTP_201_CREATED')
+            return JsonResponse('HTTP_201_CREATED', status=201, safe=0)
         # in case username or email already exists in database we return that message
         else:
-            return HttpResponseBadRequest('HTTP_460_ALREADY_EXIST')
+            return JsonResponse('HTTP_460_ALREADY_EXIST', status=460, safe=0)
 
 
