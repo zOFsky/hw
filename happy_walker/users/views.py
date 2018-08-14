@@ -59,21 +59,6 @@ class UserRegister(View):
 
 
 
-        # #if there are errors we return them in response
-        # if data_validator.errors:
-        #     errors_dict = {
-        #         'errors':[]
-        #     }
-        #     for key, value in data_validator.errors.items():
-        #         for error in value:
-        #             errors_dict['errors'].append({
-        #                 key: error,
-        #                 "code": 'registration.incorrect_input'
-        #                 }
-        #                 )
-        #     #print("ERR_DICT: {}".format(errors_dict))
-        #     return JsonResponse(errors_dict, status=400)
-
         if not(User.objects.filter(
              Q(username=data['username']) |
              Q(email=data['email'])
