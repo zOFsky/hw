@@ -53,11 +53,7 @@ class UserRegister(View):
                     })
                     index += 1
 
-            # err = data_validator.document_error_tree['password']
-
             return JsonResponse(errors_dict, status = 400)
-
-
 
         if not(User.objects.filter(
              Q(username=data['username']) |
@@ -66,9 +62,9 @@ class UserRegister(View):
             User.objects.create_user(username=data['username'],email=data['email'], 
                 password=data['password'], first_name=data['firstname'],
                 last_name=data['lastname'])
-            return JsonResponse('HTTP_201_CREATED', status=201, safe=0)
+            return HttpResponse('HTTP_201_CREATED', status=201)
         # in case username or email already exists in database we return that message
         else:
-            return JsonResponse('HTTP_460_ALREADY_EXIST', status=460, safe=0)
+            return HttpResponseBadRequest('HTTP_460_ALREADY_EXIST', status=460)
 
 
