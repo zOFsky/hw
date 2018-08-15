@@ -12,7 +12,7 @@ import json
 from . import custom_validator as cv
 
 class ValidationView(View):
-    schema = {}
+    validation_schema = {}
 
     def request_validation(self, request):
         if len(request.body) > 0 and len(request.FILES) == 0:
@@ -71,11 +71,17 @@ class UserRegister(ValidationView):
              ).exists()):
             User.objects.create_user(username=data['username'],email=data['email'], 
                 password=data['password'], first_name=data['firstname'],
-                last_name=data['lastname'])
-            return HttpResponse('HTTP_201_CREATED', status=201)
+                last_name=data['lastname'], is_active=False)
+            return HttpResponse({
+                "status" : "success",
+                "message" : "user successfully created"
+                }, status=201)
         # in case username or email already exists in database we return that message
         else:
-            return HttpResponseBadRequest('HTTP_460_ALREADY_EXIST', status=460)
+            return HttpResponseBadRequest({
+                "status" : "error",
+                "message" : "user with that credentials already exists"
+                }, status=460)
 
 
 class UserLogin(ValidationView):
@@ -105,8 +111,17 @@ class UserLogin(ValidationView):
             user = authenticate(username=existing_user.username, 
                                              password=data['password'])
             if user is not None:
-                return HttpResponse('success', status=230)
+                return JsonResponse({
+                    "status" : "error",
+                    "message" : "user does not exist"
+                    }, status=230)
             else:
-                return HttpResponseBadRequest("incorrect password", status=467)
+                return HttpResponseBadRequest({
+                "status" : "error",
+                "message" : "incorrect password"
+                }, status=467)
         else:
-            return HttpResponseBadRequest("user does not exist", status=432)
+            return HttpResponseBadRequest({
+                "status" : "error",
+                "message" : "user does not exist"
+                }, status=432)
