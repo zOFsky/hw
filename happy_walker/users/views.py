@@ -137,3 +137,43 @@ class UserLogin(ValidationView):
                 "errors":[{"message" : "password incorrect",
                 "code": "login.incorrect_password"}]
                 }, status=467)
+
+class UserUpdateProfile(View):
+    validation_schema = {
+            'email': {
+            'type': 'string', 
+            'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+            'empty': False
+            },
+    }
+    def put(self, request, user_id):
+        
+        #input validation 
+        #if data does not pass validation we send response with errors
+        if self.request_validation(request):
+            errors_dict = self.request_validation(request)
+            return JsonResponse(errors_dict, status = 400)
+        else:
+            data = json.loads(request.body)
+        #check if user trying to update his own profile
+        current_user_id = data['user_id']
+        if (current_user_id != user_id) || (user_id != 'me'):
+            return JsonResponse({"message": "Access Denied!"}, status=403)
+        else:
+            user = User.objects.filter(id=user_id).get()
+            if data["first_name"]:
+                user.first_name = data["first_name"]
+            if data["last_name"]:
+                user.last_name = data["last_name"]
+            if data["username"]:
+                #TODO: unique check
+                user.username = data["username"]
+            if data["email"]:
+                #TODO: confirmation send
+                user.email = data["email"]
+            user.save()
+            return JsonResponse({
+                "message" : "user successfully updated"
+                }, status=201)
+        # in case username or email already exists in database we return that message
+        
