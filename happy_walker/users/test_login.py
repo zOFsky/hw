@@ -6,7 +6,7 @@ from users.views import UserRegister
 from django.http import HttpRequest
 import json
 
-class RegisterTest(TestCase):
+class LoginTest(TestCase):
 
   
     def setUp(self):
@@ -21,8 +21,8 @@ class RegisterTest(TestCase):
             "username": username,
             "password": password,
             "email": email,
-            "firstname": firstname,
-            "lastname": lastname,
+            "first_name": firstname,
+            "last_name": lastname,
             "username_or_email": username_or_email,
     
         }

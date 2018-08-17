@@ -20,8 +20,8 @@ class RegisterTest(TestCase):
             "username": username,
             "password": password,
             "email": email,
-            "firstname": firstname,
-            "lastname": lastname
+            "first_name": firstname,
+            "last_name": lastname
         }
         json_string = json.dumps(my_dict)
         return json_string
