@@ -25,20 +25,19 @@ class ValidationView(View):
         data_validator(data)
         errors_dict = {}
         if data_validator.errors:
+            print("ERRORS: {}".format(data_validator.errors))
             errors_dict = {
                 'errors': []
             }
 
             for key, value in data_validator.errors.items():
-                index = 0
-                for err in range(len(data_validator.document_error_tree[key].errors)):
+                for index in range(len(data_validator.document_error_tree[key].errors)):
                     errors_dict['errors'].append({
                         "field": key,
                         "code": data_validator.document_error_tree[key].errors[index].rule,
                         "message": value[index]
                     })
-                    index += 1
-
+                    
         return errors_dict
 
 class UserRegister(ValidationView):
