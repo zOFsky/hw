@@ -164,18 +164,18 @@ class UserLogin(View):
 
 
 
-class Profile(View):
+class ProfileView(View):
 
     def get(self, request, user_id):
         if user_id == 'me':
             user = User.objects.get(id=request.user.id)
         else:
             try:
-                user = User.objects.get(id=user_id)
-                if user.is_active == False:
-                    raise ObjectDoesNotExist
+                user = User.objects.get(Q(id=user_id) & Q(is_active=True))
             except ObjectDoesNotExist:
-                return HttpResponse('This user does not exist', status=400)
+                return JsonResponse({
+                    "message": "This user does not exist",
+                }, status=400)
 
         profile = {
             'username': user.username,
