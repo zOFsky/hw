@@ -16,30 +16,27 @@ class UpdateTest(TestCase):
         self.client = Client()
         print("----------{}-----------".format(self._testMethodName))
 
-    def create_json_request(self, user_id, username="", password="", email="",
+    def create_json_request(self, username="", password="", email="",
                     first_name="", last_name="", username_or_email=""):
         my_dict = {
-            "user_id": user_id,
             "username": username,
             "password": password,
             "email": email,
             "first_name": first_name,
             "last_name": last_name,
             "username_or_email": username_or_email,
-    
         }
         json_string = json.dumps(my_dict)
         return json_string
 
     
     def test_update_api_with_correct_data_input(self):
-        request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com')
+        request_data = self.create_json_request(username='username1', password='abc1234', email='asd@mail.com')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
         login_data = self.create_json_request(username_or_email='username1',
                              password='abc1234')
-        user_id = 
         resp2 = self.client.post(self.login_url, login_data, 
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
@@ -48,57 +45,45 @@ class UpdateTest(TestCase):
                                  content_type="application/json")
         self.assertEqual(resp3.status_code, 201)
     
-    # def test_login_with_no_password(self):
-    #     request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com')
-    #     resp = self.client.post(self.registration_url, request_data,
-    #          content_type="application/json")
-    #     self.assertEqual(resp.status_code, 201)
-    #     login_data = self.create_json_request(username_or_email='username1',
-    #                          password='')
-    #     resp2 = self.client.post(self.login_url, login_data, 
-    #                              content_type="application/json")
-    #     self.assertEqual(resp2.status_code, 400)
 
-    # def test_login_with_email(self):
-    #     request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com')
-    #     resp = self.client.post(self.registration_url, request_data,
-    #          content_type="application/json")
-    #     self.assertEqual(resp.status_code, 201)
-    #     login_data = self.create_json_request(username_or_email='asd@mail.com',
-    #                          password='abc1234')
-    #     resp2 = self.client.post(self.login_url, login_data, 
-    #                              content_type="application/json")
-    #     self.assertEqual(resp2.status_code, 230)
-    
-    # def test_login_with_empty_data(self):
-    #     login_data = self.create_json_request(username_or_email=None,
-    #                          password=None)
-    #     resp2 = self.client.post(self.login_url, login_data, 
-    #                              content_type="application/json")
-    #     self.assertEqual(resp2.status_code, 400)
+    def test_update_api_with_incorrect_email(self):
+        request_data = self.create_json_request(username='username1', password='abc1234', email='asd@mail.com')
+        resp = self.client.post(self.registration_url, request_data,
+             content_type="application/json")
+        self.assertEqual(resp.status_code, 201)
+        login_data = self.create_json_request(username_or_email='username1',
+                             password='abc1234')
+        resp2 = self.client.post(self.login_url, login_data, 
+                                 content_type="application/json")
+        self.assertEqual(resp2.status_code, 230)
+        update_data = self.create_json_request(first_name="Andriy", last_name="Staythere", email='123')
+        resp3 = self.client.put(self.update_url,update_data,
+                                 content_type="application/json")
+        self.assertEqual(resp3.status_code, 400)
 
-    # def test_login_with_wrong_password(self):
-    #     request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com')
-    #     resp = self.client.post(self.registration_url, request_data,
-    #          content_type="application/json")
-    #     self.assertEqual(resp.status_code, 201)
-    #     login_data = self.create_json_request(username_or_email='username1',
-    #                          password='abcd1234')
-    #     resp2 = self.client.post(self.login_url, login_data, 
-    #                              content_type="application/json")
-    #     self.assertEqual(resp2.status_code, 467)
-    
+    def test_update_api_by_anonym_user(self):
+        request_data = self.create_json_request(username='username1', password='abc1234', email='asd@mail.com')
+        resp = self.client.post(self.registration_url, request_data,
+             content_type="application/json")
+        self.assertEqual(resp.status_code, 201)
+        
+        update_data = self.create_json_request(first_name="Andriy", last_name="Staythere", email='123@er.rt')
+        resp3 = self.client.put(self.update_url,update_data,
+                                 content_type="application/json")
+        self.assertEqual(resp3.status_code, 302)
 
-    # def test_login_with_no_email_or_username(self):
-    #     request_data = self.create_json_request(password='abc4234')
-    #     resp = self.client.post(self.login_url, request_data,
-    #          content_type="application/json")
-    #     self.assertEqual(resp.status_code, 400)
-
-    # def test_login_user_does_not_exists(self):
-    #     request_data = self.create_json_request(username_or_email='username1',
-    #                                                      password='password')
-    #     resp = self.client.post(self.login_url, request_data,
-    #          content_type="application/json")
-    #     self.assertEqual(resp.status_code, 432)
-
+    def test_update_api_with_correct_data_checking_functionality(self):
+        request_data = self.create_json_request(username='username1', password='abc1234', 
+                                       email='asd@mail.com', last_name="Smith", first_name="John")
+        resp = self.client.post(self.registration_url, request_data,
+             content_type="application/json")
+        self.assertEqual(resp.status_code, 201)
+        login_data = self.create_json_request(username_or_email='username1',
+                             password='abc1234')
+        resp2 = self.client.post(self.login_url, login_data, 
+                                 content_type="application/json")
+        self.assertEqual(resp2.status_code, 230)
+        update_data = self.create_json_request(first_name="Andriy")
+        resp3 = self.client.put(self.update_url,update_data,
+                                 content_type="application/json")
+        self.assertEqual(resp3.status_code, 201)

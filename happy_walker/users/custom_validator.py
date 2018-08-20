@@ -22,7 +22,6 @@ class CustomValidator(object):
         data_validator(data)
         errors_dict = {}
         if data_validator.errors:
-            print("ERRORS: {}".format(data_validator.errors))
             errors_dict = {
                 'errors': []
             }

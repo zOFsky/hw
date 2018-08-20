@@ -115,7 +115,7 @@ class UserUpdateProfile(LoginRequiredMixin, View):
     login_url = '/users/sign-in/'
     validation_schema = {
             'email': {
-                'required': False,
+                'empty': True,
                 'type': 'string', 
                 'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
             },
@@ -127,7 +127,6 @@ class UserUpdateProfile(LoginRequiredMixin, View):
         validator = CustomValidator(self.validation_schema)
         if validator.request_validation(request):
             errors_dict = validator.request_validation(request)
-            print("ERR: {}".format(errors_dict))
             return JsonResponse(errors_dict, status = 400)
         else:
             data = json.loads(request.body)
@@ -145,7 +144,7 @@ class UserUpdateProfile(LoginRequiredMixin, View):
             if data["username"]:
                 #TODO: unique check
                 user.username = data["username"]
-            if data["email"]:
+            if data["email"]: 
                 #TODO: confirmation send
                 user.email = data["email"]
             user.save()

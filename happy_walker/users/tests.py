@@ -48,7 +48,6 @@ class RegisterTest(TestCase):
         request_data = self.create_json_request('username2', 'abc14', 'basd@mail.com')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
-        #print("MESSAGE: {}".format(resp))
         self.assertEqual(resp.status_code, 400)
     
     def test_registration_with_incorrect_email(self):
