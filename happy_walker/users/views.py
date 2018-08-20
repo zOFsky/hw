@@ -2,7 +2,6 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.template.loader import get_template
-from django.shortcuts import render
 from django.views.generic import View
 from django.contrib.auth import authenticate, login
 from django.db.models import Q
@@ -96,7 +95,6 @@ class ConfirmEmail(View):
         token_generator = TokenGenerator()
         if token_generator.check_token(user, token):
             User.objects.filter(id=uid).update(is_active='True')
-            user = User.objects.get(id=uid)
             login(request, user)
             return JsonResponse({
                 "id": uid,
