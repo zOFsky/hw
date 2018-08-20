@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
-from .email_verification import EmailVerification
+from .email_sender import EmailSender
 
 
 class UserRegister(View):
@@ -48,12 +48,12 @@ class UserRegister(View):
                 last_name=data['last_name'], is_active=False)
 
             # send email
-            email_verification = EmailVerification()
+            confirmation_email = EmailSender()
             user = User.objects.get(username=data['username'])
             mail_subject = 'Activate your HappyWalker account'
             html_email = get_template('acc_active_email.html')
             text_email = get_template('acc_active_email')
-            email_verification.send_email(user, mail_subject, text_email, html_email)
+            confirmation_email.send_email(user, mail_subject, text_email, html_email)
 
             return JsonResponse({
                 "message" : "user successfully created"

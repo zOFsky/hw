@@ -1,7 +1,7 @@
 from django.core.mail import EmailMultiAlternatives
 from .tokens import TokenGenerator
 
-class EmailVerification:
+class EmailSender:
 
     def send_email(self, user, mail_subject, text_email, html_email):
 
