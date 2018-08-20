@@ -67,6 +67,47 @@ class UserRegister(View):
                 }, status=460)
 
 
+class ConfirmEmail(View):
+
+    validation_schema = {
+        'uid': {
+            'required': True,
+            'type': 'string',
+            'empty': False
+        },
+        'token': {
+            'required': True,
+            'type': 'string',
+            'empty': False
+        },
+    }
+
+    def post(self, request):
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status=400)
+        else:
+            data = json.loads(request.body)
+
+        uid = data['uid']
+        token = data['token']
+        user = User.objects.get(id=uid)
+        token_generator = TokenGenerator()
+        if token_generator.check_token(user, token):
+            User.objects.filter(id=uid).update(is_active='True')
+            user = User.objects.get(id=uid)
+            login(request, user)
+            return JsonResponse({
+                "id": uid,
+                "message": "user successfully activated"
+            }, status=200)
+        else:
+            return HttpResponseBadRequest({
+                "message": "activation link is invalid"
+            }, status=400)
+
+
 class UserLogin(View):
     validation_schema = {
         'password': {
