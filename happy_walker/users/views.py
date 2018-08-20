@@ -115,9 +115,9 @@ class UserUpdateProfile(LoginRequiredMixin, View):
     login_url = '/users/sign-in/'
     validation_schema = {
             'email': {
-            'type': 'string', 
-            'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
-            'empty': False
+                'required': False,
+                'type': 'string', 
+                'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
             },
     }
     def put(self, request):
@@ -127,14 +127,16 @@ class UserUpdateProfile(LoginRequiredMixin, View):
         validator = CustomValidator(self.validation_schema)
         if validator.request_validation(request):
             errors_dict = validator.request_validation(request)
+            print("ERR: {}".format(errors_dict))
             return JsonResponse(errors_dict, status = 400)
         else:
             data = json.loads(request.body)
         #check if user trying to update his own profile
-        current_user_id = data['user_id']
-        if (current_user_id != user_id) | (user_id != 'me'):
-            return JsonResponse({"message": "Access Denied!"}, status=403)
-        else:
+        # current_user_id = data['user_id']
+        # if (current_user_id != user_id) | (user_id != 'me'):
+        #     return JsonResponse({"message": "Access Denied!"}, status=403)
+        # else:
+            user_id = request.user.id
             user = User.objects.filter(id=user_id).get()
             if data["first_name"]:
                 user.first_name = data["first_name"]

@@ -16,9 +16,10 @@ class UpdateTest(TestCase):
         self.client = Client()
         print("----------{}-----------".format(self._testMethodName))
 
-    def create_json_request(self, username="", password="", email="",
+    def create_json_request(self, user_id, username="", password="", email="",
                     first_name="", last_name="", username_or_email=""):
         my_dict = {
+            "user_id": user_id,
             "username": username,
             "password": password,
             "email": email,
@@ -38,13 +39,14 @@ class UpdateTest(TestCase):
         self.assertEqual(resp.status_code, 201)
         login_data = self.create_json_request(username_or_email='username1',
                              password='abc1234')
+        user_id = 
         resp2 = self.client.post(self.login_url, login_data, 
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
         update_data = self.create_json_request(first_name="Andriy", last_name="Staythere")
         resp3 = self.client.put(self.update_url,update_data,
                                  content_type="application/json")
-        self.assertEqual(resp.status_code, 201)
+        self.assertEqual(resp3.status_code, 201)
     
     # def test_login_with_no_password(self):
     #     request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com')
