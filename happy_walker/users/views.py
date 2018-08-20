@@ -44,12 +44,17 @@ class UserRegister(View):
              Q(email=data['email'])
              ).exists()):
             #if user doesn't exist we create him with data
-            User.objects.create_user(username=data['username'],email=data['email'], 
+            User.objects.create_user(username=data['username'], email=data['email'],
                 password=data['password'], first_name=data['first_name'],
-                last_name=data['last_name'])
+                last_name=data['last_name'], is_active=False)
 
             # send email
-            
+            email_verification = EmailVerification()
+            user = User.objects.get(username=data['username'])
+            mail_subject = 'Activate your HappyWalker account'
+            html_email = get_template('acc_active_email.html')
+            text_email = get_template('acc_active_email')
+            email_verification.send_email(user, mail_subject, text_email, html_email)
 
             return JsonResponse({
                 "message" : "user successfully created"
