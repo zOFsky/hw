@@ -1,14 +1,17 @@
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
+from django.template.loader import get_template
 from django.shortcuts import render
 from django.views.generic import View
-from cerberus import Validator
 from django.contrib.auth import authenticate, login
 from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin
 import json
 from .custom_validator import CustomValidator
+from .tokens import TokenGenerator
+from .email_verification import EmailVerification
+
 
 class UserRegister(View):
        
@@ -44,6 +47,10 @@ class UserRegister(View):
             User.objects.create_user(username=data['username'],email=data['email'], 
                 password=data['password'], first_name=data['first_name'],
                 last_name=data['last_name'])
+
+            # send email
+            
+
             return JsonResponse({
                 "message" : "user successfully created"
                 }, status=201)
