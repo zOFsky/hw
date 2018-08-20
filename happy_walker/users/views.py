@@ -1,15 +1,16 @@
-from django import forms
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
-from django.shortcuts import render
+from django.template.loader import get_template
 from django.views.generic import View
-from cerberus import Validator
 from django.contrib.auth import authenticate, login
 from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin
 import json
 from .custom_validator import CustomValidator
+from .tokens import TokenGenerator
+from .email_sender import EmailSender
+
 
 class UserRegister(View):
        
@@ -42,9 +43,18 @@ class UserRegister(View):
              Q(email=data['email'])
              ).exists()):
             #if user doesn't exist we create him with data
-            User.objects.create_user(username=data['username'],email=data['email'], 
+            User.objects.create_user(username=data['username'], email=data['email'],
                 password=data['password'], first_name=data['first_name'],
-                last_name=data['last_name'])
+                last_name=data['last_name'], is_active=False)
+
+            # send email
+            confirmation_email = EmailSender()
+            user = User.objects.get(username=data['username'])
+            mail_subject = 'Activate your HappyWalker account'
+            html_email = get_template('acc_active_email.html')
+            text_email = get_template('acc_active_email')
+            confirmation_email.send_email(user, mail_subject, text_email, html_email)
+
             return JsonResponse({
                 "message" : "user successfully created"
                 }, status=201)
@@ -54,6 +64,46 @@ class UserRegister(View):
                 "errors":[{"message" : "user with that credentials already exists",
                 "code": "registration.user_exists"}]
                 }, status=460)
+
+
+class ConfirmEmail(View):
+
+    validation_schema = {
+        'uid': {
+            'required': True,
+            'type': 'string',
+            'empty': False
+        },
+        'token': {
+            'required': True,
+            'type': 'string',
+            'empty': False
+        },
+    }
+
+    def post(self, request):
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status=400)
+        else:
+            data = json.loads(request.body)
+
+        uid = data['uid']
+        token = data['token']
+        user = User.objects.get(id=uid)
+        token_generator = TokenGenerator()
+        if token_generator.check_token(user, token):
+            User.objects.filter(id=uid).update(is_active='True')
+            login(request, user)
+            return JsonResponse({
+                "id": uid,
+                "message": "user successfully activated"
+            }, status=200)
+        else:
+            return HttpResponseBadRequest({
+                "message": "activation link is invalid"
+            }, status=400)
 
 
 class UserLogin(View):
