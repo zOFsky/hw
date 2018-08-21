@@ -111,7 +111,6 @@ class ChangeEmailView(View):
     validation_schema = {
         'uid': {
             'required': True,
-            'type': 'string',
             'empty': False
         },
         'token': {
@@ -131,7 +130,7 @@ class ChangeEmailView(View):
         validator = CustomValidator(self.validation_schema)
         if validator.request_validation(request):
             errors_dict = validator.request_validation(request)
-            return JsonResponse(errors_dict, status=400)
+            return JsonResponse(errors_dict, status=401)
         else:
             data = json.loads(request.body)
 
@@ -151,7 +150,7 @@ class ChangeEmailView(View):
         else:
             return HttpResponseBadRequest({
                 "message": "activation link is invalid"
-            }, status=400)
+            }, status=406)
 
 class UserLogin(View):
     validation_schema = {
@@ -249,7 +248,8 @@ class UserUpdateProfileView(LoginRequiredMixin, View):
 
                 return JsonResponse({
                     "message": "please confirm your new email",
-                    "token": token_data["token"]
+                    "token": token_data["token"],
+                    "uid": token_data["uid"],
                 }, status=202)
             return JsonResponse({
                 "message" : "user successfully updated"
