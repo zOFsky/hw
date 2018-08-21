@@ -49,12 +49,18 @@ class UserRegister(View):
                 last_name=data['last_name'], is_active=False)
 
             # send email
-            confirmation_email = EmailSender()
             user = User.objects.get(username=data['username'])
+            token_generator = TokenGenerator()
+            confirmation_email = EmailSender()
+            context = {
+                'uid': user.id,
+                'token': token_generator.make_token(user),
+            }
+            email = user.email
             mail_subject = 'Activate your HappyWalker account'
             html_email = get_template('acc_active_email.html')
             text_email = get_template('acc_active_email')
-            confirmation_email.send_email(user, mail_subject, text_email, html_email)
+            confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
 
             return JsonResponse({
                 "message" : "user successfully created"
