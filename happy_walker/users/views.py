@@ -6,6 +6,7 @@ from django.views.generic import View
 from django.contrib.auth import authenticate, login
 from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ObjectDoesNotExist
 import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
@@ -161,3 +162,28 @@ class UserLogin(View):
                 "code": "login.incorrect_password"}]
                 }, status=467)
 
+
+
+class ProfileView(View):
+
+    def get(self, request, user_id):
+        if user_id == 'me':
+            user = User.objects.get(id=request.user.id)
+        else:
+            try:
+                user = User.objects.get(id=user_id, is_active=True)
+            except ObjectDoesNotExist:
+                return JsonResponse({
+                    "message": "This user does not exist",
+                }, status=400)
+
+        profile = {
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        }
+
+        if user_id == str(request.user.id) or user_id == 'me':
+            profile['email'] = user.email
+
+        return JsonResponse(profile, status=200)
