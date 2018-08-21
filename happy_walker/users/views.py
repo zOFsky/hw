@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
-from .email_sender import EmailSender
+from .email_sender import EmailSender, EmailChangeSender
 
 
 class UserRegister(View):
@@ -45,7 +45,7 @@ class UserRegister(View):
             #if user doesn't exist we create him with data
             User.objects.create_user(username=data['username'], email=data['email'],
                 password=data['password'], first_name=data['first_name'],
-                last_name=data['last_name'], is_active=False)
+                last_name=data['last_name'], is_active=True)
 
             # send email
             confirmation_email = EmailSender()
@@ -106,6 +106,53 @@ class ConfirmEmail(View):
             }, status=400)
 
 
+class ChangeEmailView(View):
+
+    validation_schema = {
+        'uid': {
+            'required': True,
+            'type': 'string',
+            'empty': False
+        },
+        'token': {
+            'required': True,
+            'type': 'string',
+            'empty': False
+        },
+        'new_email': {
+            'required': True,
+            'type': 'string',
+            'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+
+        }
+    }
+
+    def post(self, request):
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status=400)
+        else:
+            data = json.loads(request.body)
+
+        uid = data['uid']
+        token = data['token']
+        new_email = data['new_email']
+        user = User.objects.get(id=uid)
+        token_generator = TokenGenerator()
+        if token_generator.check_token(user, token):
+            User.objects.filter(id=uid).update(email=new_email)
+            login(request, user)
+            return JsonResponse({
+                "id": uid,
+                "new_email": new_email,
+                "message": "email successfully updated"
+            }, status=201)
+        else:
+            return HttpResponseBadRequest({
+                "message": "activation link is invalid"
+            }, status=400)
+
 class UserLogin(View):
     validation_schema = {
         'password': {
@@ -161,7 +208,7 @@ class UserLogin(View):
                 "code": "login.incorrect_password"}]
                 }, status=467)
 
-class UserUpdateProfile(LoginRequiredMixin, View):
+class UserUpdateProfileView(LoginRequiredMixin, View):
     login_url = '/users/sign-in/'
     validation_schema = {
             'email': {
@@ -180,11 +227,6 @@ class UserUpdateProfile(LoginRequiredMixin, View):
             return JsonResponse(errors_dict, status = 400)
         else:
             data = json.loads(request.body)
-        #check if user trying to update his own profile
-        # current_user_id = data['user_id']
-        # if (current_user_id != user_id) | (user_id != 'me'):
-        #     return JsonResponse({"message": "Access Denied!"}, status=403)
-        # else:
             user_id = request.user.id
             user = User.objects.filter(id=user_id).get()
             if data["first_name"]:
@@ -194,10 +236,21 @@ class UserUpdateProfile(LoginRequiredMixin, View):
             if data["username"]:
                 #TODO: unique check
                 user.username = data["username"]
+            user.save()
             if data["email"]: 
                 #TODO: confirmation send
-                user.email = data["email"]
-            user.save()
+                new_email = data["email"]
+                change_email = EmailChangeSender(user)
+                mail_subject = 'Email change confirmation'
+                html_email = get_template('acc_active_email.html')
+                text_email = get_template('acc_active_email')
+                token_data = change_email.generate_token(user, new_email)
+                change_email.send_email(mail_subject, text_email, html_email)
+
+                return JsonResponse({
+                    "message": "please confirm your new email",
+                    "token": token_data["token"]
+                }, status=202)
             return JsonResponse({
                 "message" : "user successfully updated"
                 }, status=201)
