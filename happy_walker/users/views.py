@@ -171,7 +171,7 @@ class ProfileView(View):
             user = User.objects.get(id=request.user.id)
         else:
             try:
-                user = User.objects.get(Q(id=user_id) & Q(is_active=True))
+                user = User.objects.get(id=user_id, is_active=True)
             except ObjectDoesNotExist:
                 return JsonResponse({
                     "message": "This user does not exist",
