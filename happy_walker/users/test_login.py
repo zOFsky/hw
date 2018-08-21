@@ -2,7 +2,6 @@ from django.contrib.auth.models import User
 from django.test import TestCase, RequestFactory, Client
 from django.urls import reverse, resolve
 from home.views import homepage
-from users.views import UserRegister
 from django.http import HttpRequest
 import json
 

@@ -12,7 +12,7 @@ from .tokens import TokenGenerator
 from .email_sender import EmailSender, EmailChangeSender
 
 
-class UserRegister(View):
+class UserRegisterView(View):
        
     validation_schema = {
         'password': {
@@ -66,7 +66,7 @@ class UserRegister(View):
                 }, status=460)
 
 
-class ConfirmEmail(View):
+class ConfirmEmailView(View):
 
     validation_schema = {
         'uid': {
@@ -152,7 +152,7 @@ class ChangeEmailView(View):
                 "message": "activation link is invalid"
             }, status=406)
 
-class UserLogin(View):
+class UserLoginView(View):
     validation_schema = {
         'password': {
             'type': 'string', 
@@ -226,8 +226,7 @@ class UserUpdateProfileView(LoginRequiredMixin, View):
             return JsonResponse(errors_dict, status = 400)
         else:
             data = json.loads(request.body)
-            user_id = request.user.id
-            user = User.objects.filter(id=user_id).get()
+            user = User.objects.filter(id=request.user.id).get()
             if data["first_name"]:
                 user.first_name = data["first_name"]
             if data["last_name"]:
@@ -237,7 +236,7 @@ class UserUpdateProfileView(LoginRequiredMixin, View):
                 user.username = data["username"]
             user.save()
             if data["email"]: 
-                #TODO: confirmation send
+                # sending confirmation letter to new email
                 new_email = data["email"]
                 change_email = EmailChangeSender(user)
                 mail_subject = 'Email change confirmation'
