@@ -31,7 +31,8 @@ class UpdateTest(TestCase):
 
     
     def test_update_api_with_correct_data_input(self):
-        request_data = self.create_json_request(username='username1', password='abc1234', email='asd@mail.com')
+        request_data = self.create_json_request(username='username1', password='abc1234',
+                    email='asd@mail.com', first_name='r', last_name='r')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
@@ -47,7 +48,8 @@ class UpdateTest(TestCase):
     
 
     def test_update_api_with_incorrect_email(self):
-        request_data = self.create_json_request(username='username1', password='abc1234', email='asd@mail.com')
+        request_data = self.create_json_request(username='username1', password='abc1234', 
+                   email='asd@mail.com', first_name='r', last_name='r')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
@@ -62,7 +64,8 @@ class UpdateTest(TestCase):
         self.assertEqual(resp3.status_code, 400)
 
     def test_update_api_by_anonym_user(self):
-        request_data = self.create_json_request(username='username1', password='abc1234', email='asd@mail.com')
+        request_data = self.create_json_request(username='username1', password='abc1234', 
+                       email='asd@mail.com', first_name='r', last_name='r')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)

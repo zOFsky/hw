@@ -38,38 +38,42 @@ class RegisterTest(TestCase):
 
     
     def test_registration_api_with_correct_data_input(self):
-        request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com')
+        request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com',
+                   'random', 'random')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
     
     def test_registration_with_password_too_short(self):
-        request_data = self.create_json_request('username2', 'abc14', 'basd@mail.com')
+        request_data = self.create_json_request('username2', 'abc14', 'basd@mail.com',
+                     'random', 'random')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
     
     def test_registration_with_incorrect_email(self):
-        request_data = self.create_json_request('username3', 'abc1434', 'asd@mailcom')
+        request_data = self.create_json_request('username3', 'abc1434', 
+                                     'asd@mailcom', 'random', 'random')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
 
     
     def test_registration_with_incorrect_email_and_password(self):
-        request_data = self.create_json_request('username4', 'abc4', 'asdmailcom')
+        request_data = self.create_json_request('username4', 'abc4', 'asdmailcom', 'random', 'r')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
 
     def test_registration_with_empty_email_and_password(self):
-        request_data = self.create_json_request('username4', 'abc1234', 'asdf')
+        request_data = self.create_json_request('username4', '', '', 'r', 'r')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
 
     def test_registration_wih_no_password(self):
-        request_data = self.create_json_request('username5', email='asd@mail.com')
+        request_data = self.create_json_request('username5', email='asd@mail.com', 
+                        firstname='r', lastname='r')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
@@ -81,30 +85,30 @@ class RegisterTest(TestCase):
         self.assertEqual(resp.status_code, 400)
 
     def test_registration_username_exists(self):
-        request_data = self.create_json_request('username1', 'abc4234', 'email1@i.ua')
+        request_data = self.create_json_request('username1', 'abc4234', 'email1@i.ua', 'r', 'r')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         
-        request_data = self.create_json_request('username1', 'abc4234', 'email1@i.ua')
+        request_data = self.create_json_request('username1', 'abc4234', 'email1@i.ua', 'r', 'r')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 460)
 
 
     def test_registration_with_correct_data_then_existing_username_and_email_correct_data(self):
-        request_data = self.create_json_request('username1', 'abc4234', 'email1@i.ua')
+        request_data = self.create_json_request('username1', 'abc4234', 'email1@i.ua', 'r', 'r')
         resp1 = self.client.post(self.registration_url, request_data,
              content_type="application/json")
 
-        request_data = self.create_json_request('username1', 'abc14234', 'email1@22.ua')
+        request_data = self.create_json_request('username1', 'abc14234', 'email1@22.ua', 'r', 'r')
         resp2 = self.client.post(self.registration_url, request_data,
              content_type="application/json")
 
-        request_data = self.create_json_request('username2', 'abc14234', 'email1@i.ua')
+        request_data = self.create_json_request('username2', 'abc14234', 'email1@i.ua', 'r', 'r')
         resp3 = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         
-        request_data = self.create_json_request('username2', 'abc14234', 'email221@22.ua')
+        request_data = self.create_json_request('username2', 'abc14234', 'email221@22.ua', 'r', 'r')
         resp4 = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp1.status_code, 201)
