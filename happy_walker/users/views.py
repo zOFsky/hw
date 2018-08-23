@@ -16,6 +16,7 @@ class UserRegisterView(View):
        
     validation_schema = {
         'password': {
+            'required': True,
             'type': 'string', 
             'minlength': 6, 
             'empty': False
@@ -26,6 +27,23 @@ class UserRegisterView(View):
             'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
             'empty': False
             },
+        'username':{
+            'required': True,
+            'type': 'string',
+            'empty': False,
+        },
+        'first_name':{
+            'required': True,
+            'type': 'string',
+            'empty': False,
+        },
+        
+        'last_name':{
+            'required': True,
+            'type': 'string',
+            'empty': False,
+        }
+
     }
     
     def post(self, request):
