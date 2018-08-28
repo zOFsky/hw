@@ -30,7 +30,8 @@ class LoginTest(TestCase):
 
     
     def test_login_api_with_correct_data_input(self):
-        request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com', 'r', 'r')
+        request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com',
+                                                'name', 'lastname')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)

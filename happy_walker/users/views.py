@@ -6,10 +6,11 @@ from django.views.generic import View
 from django.contrib.auth import authenticate, login
 from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ObjectDoesNotExist
 import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
-from .email_sender import EmailSender, EmailChangeSender
+from .email_sender import EmailSender
 
 
 class UserRegisterView(View):
@@ -66,19 +67,25 @@ class UserRegisterView(View):
                 last_name=data['last_name'], is_active=True)
 
             # send email
-            confirmation_email = EmailSender()
             user = User.objects.get(username=data['username'])
+            token_generator = TokenGenerator()
+            confirmation_email = EmailSender()
+            context = {
+                'uid': user.id,
+                'token': token_generator.make_token(user),
+            }
+            email = user.email
             mail_subject = 'Activate your HappyWalker account'
             html_email = get_template('acc_active_email.html')
             text_email = get_template('acc_active_email')
-            confirmation_email.send_email(user, mail_subject, text_email, html_email)
+            confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
 
             return JsonResponse({
-                "message" : "user successfully created"
+                "message" : "user successfully created",
                 }, status=201)
         # in case username or email already exists in database we return that message
         else:
-            return HttpResponseBadRequest({
+            return JsonResponse({
                 "errors":[{"message" : "user with that credentials already exists",
                 "code": "registration.user_exists"}]
                 }, status=460)
@@ -173,6 +180,7 @@ class ChangeEmailView(View):
 class UserLoginView(View):
     validation_schema = {
         'password': {
+            'required': True,
             'type': 'string', 
             'empty': False
             },
@@ -197,14 +205,14 @@ class UserLoginView(View):
                                           Q(email=data['username_or_email'])).get()
         #return response with error if we couldn't find user with entered data
         except:
-            return HttpResponseBadRequest({
+            return JsonResponse({
                 "errors":[{"message" : "user does not exist in our database",
                 "code": "login.user_does_not_exists"}]
                 }, status=432)
         #checking if user is active
         #at this point user is always active, but it will be changed in further development 
         if existing_user and existing_user.is_active==False:
-            return HttpResponseBadRequest({
+            return JsonResponse({
                 "errors":[{"message" : "user is not active",
                 "code": "login.user_is_not_active"}]
                 }, status=455)
@@ -220,7 +228,7 @@ class UserLoginView(View):
                     }, status=230)
             #if user didn't pass authentication we send message
             else:
-                return HttpResponseBadRequest({
+                return JsonResponse({
                 "errors":[{"message" : "password incorrect",
                 "code": "login.incorrect_password"}]
                 }, status=467)
@@ -255,20 +263,58 @@ class UserUpdateProfileView(LoginRequiredMixin, View):
             user.save()
             if data["email"]: 
                 # sending confirmation letter to new email
-                new_email = data["email"]
-                change_email = EmailChangeSender(user)
+                # new_email = data["email"]
+                # change_email = EmailChangeSender(user)
+                # mail_subject = 'Email change confirmation'
+                # html_email = get_template('acc_active_email.html')
+                # text_email = get_template('acc_active_email')
+                # token_data = change_email.generate_token(user, new_email)
+                # change_email.send_email(mail_subject, text_email, html_email)
+                # send email
+                #user = User.objects.get(username=data['username'])
+                token_generator = TokenGenerator()
+                confirmation_email = EmailSender()
+                context = {
+                    'uid': user.id,
+                    'token': token_generator.make_token(user),
+                }
+                email = data['email']
                 mail_subject = 'Email change confirmation'
                 html_email = get_template('acc_active_email.html')
                 text_email = get_template('acc_active_email')
-                token_data = change_email.generate_token(user, new_email)
-                change_email.send_email(mail_subject, text_email, html_email)
+                confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
 
                 return JsonResponse({
                     "message": "please confirm your new email",
-                    "token": token_data["token"],
-                    "uid": token_data["uid"],
+                    "token": context["token"],
+                    "uid": context["uid"],
                 }, status=202)
             return JsonResponse({
                 "message" : "user successfully updated"
                 }, status=201)
         
+
+
+class ProfileView(View):
+
+    def get(self, request, user_id):
+        if user_id == 'me':
+            user = User.objects.get(id=request.user.id)
+        else:
+            try:
+                user = User.objects.get(id=user_id, is_active=True)
+            except ObjectDoesNotExist:
+                return JsonResponse({
+                    "message": "This user does not exist",
+                }, status=400)
+
+        profile = {
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        }
+
+        if user_id == str(request.user.id) or user_id == 'me':
+            profile['email'] = user.email
+
+        return JsonResponse(profile, status=200)
