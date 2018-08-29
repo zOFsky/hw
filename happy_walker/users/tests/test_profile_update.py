@@ -1,8 +1,5 @@
-from django.contrib.auth.models import User
 from django.test import TestCase, RequestFactory, Client
 from django.urls import reverse, resolve
-from home.views import homepage
-from django.http import HttpRequest
 import json
 
 class UpdateTest(TestCase):
@@ -11,7 +8,7 @@ class UpdateTest(TestCase):
     def setUp(self):
         self.registration_url = reverse('register')
         self.login_url = reverse('login')
-        self.update_url = reverse('update')
+        self.update_url = reverse('profile', args=['me'])
         self.client = Client()
         print("----------{}-----------".format(self._testMethodName))
 
