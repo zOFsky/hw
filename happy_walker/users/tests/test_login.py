@@ -1,7 +1,7 @@
 from django.test import TestCase, RequestFactory, Client
 from django.urls import reverse, resolve
 import json
-
+#will remove
 class LoginTest(TestCase):
 
   
