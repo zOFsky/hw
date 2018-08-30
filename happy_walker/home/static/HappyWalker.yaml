@@ -1,0 +1,170 @@
+swagger: "2.0"
+info:
+  description: "This is Happy Walker API documentation"
+  version: "1.0.0"
+  title: "Happy Walker"
+tags:
+- name: "user"
+  description: "User API"
+  externalDocs:
+    description: "Find out more"
+schemes:
+- "http"
+paths:
+  /users/register:
+    post:
+      tags:
+      - "user"
+      summary: "Add a new User to the store"
+      description: ""
+      operationId: "addUser"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User object that needs to be added to the store"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        201:
+          description: "user successfully created"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+        460:
+          description: "user with that credentials already exists"
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    message:
+                      type: "string"
+                    code:
+                      type: "string"
+        400:
+          description: "input errors"
+          schema:
+            type: "object"
+            properties:
+              errors:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    field:
+                      type: "string"
+                    code:
+                      type: "string"
+                    message:
+                      type: "string"
+  /users/confirm_email:
+    post:
+      tags:
+      - "user"
+      summary: "User email verification"
+      description: ""
+      operationId: "email verification"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User email verification"
+        required: true
+        schema:
+          $ref: "#/definitions/Email"
+      responses:
+        400:
+          description: "activation link is invalid"
+          shema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+        200:
+          description: "user successfully activated"
+          shema:
+            type: "object"
+            properties:
+              id:
+                type: "integer"
+              message:
+                type: "string"
+  /users/{user_id}:
+    get:
+      tags:
+      - "user"
+      summary: "Get user profile"
+      description: ""
+      operationID: "get user profile"
+      parameters:
+      - in: "path"
+        name: "user_id"
+        required: true
+        type: string
+      responses:
+        200:
+          description: "success"
+          schema:
+            type: "object"
+            properties:
+              username:
+                type: "string"
+              first_name:
+                type: "string"
+              last_name:
+                type: "string"
+              email:
+                type: "string"
+                required:
+                  - username
+                  - last_name
+                  - first_name
+        400:
+          description: "error"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+definitions:
+  User:
+    type: "object"
+    properties:
+      username:
+        type: "string"
+      first_name:
+        type: "string"
+      last_name:
+        type: "string"
+      email:
+        type: "string"
+      password:
+        minLength: 6
+        type: "string"
+    xml:
+      name: "User"
+  Email:
+    type: "object"
+    properties:
+      uid:
+        type: "string"
+      token:
+        type: "string"
+  ApiResponse:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      type:
+        type: "string"
+      message:
+        type: "string"
+externalDocs:
+  description: "Happy Walker"
+  url: "http://localhost:8000/home"
