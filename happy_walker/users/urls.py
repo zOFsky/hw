@@ -9,8 +9,8 @@ urlpatterns = [
     path('register', csrf_exempt(UserRegisterView.as_view()), name='register'),
     path('confirm_email', csrf_exempt(ConfirmEmailView.as_view()), name='confirm_email'),
     path('change_email', csrf_exempt(ChangeEmailView.as_view()), name='change_email'),
-    path('sign-in', UserLoginView.as_view(), name='login'),
-    path('me', UserUpdateProfileView.as_view(), name='update'),
+    path('sign-in', csrf_exempt(UserLoginView.as_view()), name='login'),
+    path('me', csrf_exempt(UserUpdateProfileView.as_view()), name='update'),
     path('<user_id>', login_required(csrf_exempt(ProfileView.as_view())), name='profile'),
 
 ]

@@ -236,11 +236,23 @@ class UserLoginView(View):
 class UserUpdateProfileView(LoginRequiredMixin, View):
     login_url = '/users/sign-in/'
     validation_schema = {
-            'email': {
+        'email': {
                 'empty': True,
                 'type': 'string', 
                 'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
-            },
+        },
+        'first_name':{
+            'required': True,
+            'type': 'string',
+            'empty': False,
+        },
+        
+        'last_name':{
+            'required': True,
+            'type': 'string',
+            'empty': False,
+        }
+            
     }
     def put(self, request):
         #input validation 
@@ -253,25 +265,14 @@ class UserUpdateProfileView(LoginRequiredMixin, View):
         else:
             data = json.loads(request.body)
             user = User.objects.filter(id=request.user.id).get()
-            if data["first_name"]:
-                user.first_name = data["first_name"]
-            if data["last_name"]:
-                user.last_name = data["last_name"]
-            if data["username"]:
-                #TODO: unique check
-                user.username = data["username"]
+            #if data["first_name"]:
+            user.first_name = data["first_name"]
+            #if data["last_name"]:
+            user.last_name = data["last_name"]
+            
             user.save()
             if data["email"]: 
                 # sending confirmation letter to new email
-                # new_email = data["email"]
-                # change_email = EmailChangeSender(user)
-                # mail_subject = 'Email change confirmation'
-                # html_email = get_template('acc_active_email.html')
-                # text_email = get_template('acc_active_email')
-                # token_data = change_email.generate_token(user, new_email)
-                # change_email.send_email(mail_subject, text_email, html_email)
-                # send email
-                #user = User.objects.get(username=data['username'])
                 token_generator = TokenGenerator()
                 confirmation_email = EmailSender()
                 context = {

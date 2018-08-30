@@ -24,7 +24,6 @@ class UpdateTest(TestCase):
             "first_name": first_name,
             "last_name": last_name,
             "username_or_email": username_or_email,
-            "email": email,
         }
         json_string = json.dumps(my_dict)
         return json_string
