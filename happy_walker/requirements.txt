@@ -2,3 +2,4 @@ django==2.0.7
 djongo==1.2.29
 cerberus==1.2
 mock==2.0.0
+gunicorn==19.9.0
