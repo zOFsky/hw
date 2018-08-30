@@ -5,7 +5,6 @@ from django.template.loader import get_template
 from django.views.generic import View
 from django.contrib.auth import authenticate, login
 from django.db.models import Q
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 import json
 from .custom_validator import CustomValidator
@@ -18,8 +17,8 @@ class UserRegisterView(View):
     validation_schema = {
         'password': {
             'required': True,
-            'type': 'string', 
-            'minlength': 6, 
+            'type': 'string',
+            'minlength': 6,
             'empty': False
             },
         'email': {
@@ -177,6 +176,7 @@ class ChangeEmailView(View):
                 "message": "activation link is invalid"
             }, status=406)
 
+
 class UserLoginView(View):
     validation_schema = {
         'password': {
@@ -232,70 +232,18 @@ class UserLoginView(View):
                 "errors":[{"message" : "password incorrect",
                 "code": "login.incorrect_password"}]
                 }, status=467)
-
-class UserUpdateProfileView(LoginRequiredMixin, View):
-    login_url = '/users/sign-in/'
-    validation_schema = {
-            'email': {
-                'empty': True,
-                'type': 'string', 
-                'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
-            },
-    }
-    def put(self, request):
-        #input validation 
-        #if data does not pass validation we send response with errors
-
-        validator = CustomValidator(self.validation_schema)
-        if validator.request_validation(request):
-            errors_dict = validator.request_validation(request)
-            return JsonResponse(errors_dict, status = 400)
-        else:
-            data = json.loads(request.body)
-            user = User.objects.filter(id=request.user.id).get()
-            if data["first_name"]:
-                user.first_name = data["first_name"]
-            if data["last_name"]:
-                user.last_name = data["last_name"]
-            if data["username"]:
-                #TODO: unique check
-                user.username = data["username"]
-            user.save()
-            if data["email"]: 
-                # sending confirmation letter to new email
-                # new_email = data["email"]
-                # change_email = EmailChangeSender(user)
-                # mail_subject = 'Email change confirmation'
-                # html_email = get_template('acc_active_email.html')
-                # text_email = get_template('acc_active_email')
-                # token_data = change_email.generate_token(user, new_email)
-                # change_email.send_email(mail_subject, text_email, html_email)
-                # send email
-                #user = User.objects.get(username=data['username'])
-                token_generator = TokenGenerator()
-                confirmation_email = EmailSender()
-                context = {
-                    'uid': user.id,
-                    'token': token_generator.make_token(user),
-                }
-                email = data['email']
-                mail_subject = 'Email change confirmation'
-                html_email = get_template('acc_active_email.html')
-                text_email = get_template('acc_active_email')
-                confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
-
-                return JsonResponse({
-                    "message": "please confirm your new email",
-                    "token": context["token"],
-                    "uid": context["uid"],
-                }, status=202)
-            return JsonResponse({
-                "message" : "user successfully updated"
-                }, status=201)
         
 
 
 class ProfileView(View):
+
+    validation_schema = {
+        'email': {
+            'empty': True,
+            'type': 'string',
+            'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+        },
+    }
 
     def get(self, request, user_id):
         if user_id == 'me':
@@ -318,3 +266,43 @@ class ProfileView(View):
             profile['email'] = user.email
 
         return JsonResponse(profile, status=200)
+
+
+    def put(self, request, *args, **kwargs):
+        # input validation
+        # if data does not pass validation we send response with errors
+
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status=400)
+        else:
+            data = json.loads(request.body)
+            user = User.objects.filter(id=request.user.id).get()
+            if data["first_name"]:
+                user.first_name = data["first_name"]
+            if data["last_name"]:
+                user.last_name = data["last_name"]
+            user.save()
+            if data["email"]:
+                # sending confirmation letter to new email
+                token_generator = TokenGenerator()
+                confirmation_email = EmailSender()
+                context = {
+                    'uid': user.id,
+                    'token': token_generator.make_token(user),
+                }
+                email = data['email']
+                mail_subject = 'Email change confirmation'
+                html_email = get_template('acc_active_email.html')
+                text_email = get_template('acc_active_email')
+                confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
+
+                return JsonResponse({
+                    "message": "please confirm your new email",
+                    "token": context["token"],
+                    "uid": context["uid"],
+                }, status=202)
+            return JsonResponse({
+                "message": "user successfully updated"
+            }, status=201)
