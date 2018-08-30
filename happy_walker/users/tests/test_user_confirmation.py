@@ -35,7 +35,7 @@ class UpdateTest(TestCase):
         return json_string
 
     def fake_send_email(self, email, mail_subject, text_email, html_email, context):
-       pass
+
 
     @mock.patch("users.email_sender.EmailSender.send_email", fake_send_email)
 
@@ -44,5 +44,4 @@ class UpdateTest(TestCase):
                                                 'name', 'lastname')
         resp = self.client.post(self.registration_url, user,
              content_type="application/json")
-        print(resp.content)
         self.assertEqual(resp.status_code, 201)
