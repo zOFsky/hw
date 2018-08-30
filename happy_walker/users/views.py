@@ -222,6 +222,8 @@ class UserLoginView(View):
                                              password=data['password'])
             if user is not None:
                 login(request, user)
+                if not request.session.exists(request.session.session_key):
+                    request.session.create() 
                 return JsonResponse({
                     "message": "login successfull",
                     "token": request.session.session_key
