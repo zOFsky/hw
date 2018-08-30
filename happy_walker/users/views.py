@@ -239,10 +239,22 @@ class ProfileView(View):
 
     validation_schema = {
         'email': {
-            'empty': True,
-            'type': 'string',
-            'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+                'empty': True,
+                'type': 'string', 
+                'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
         },
+        'first_name':{
+            'required': True,
+            'type': 'string',
+            'empty': False,
+        },
+        
+        'last_name':{
+            'required': True,
+            'type': 'string',
+            'empty': False,
+        }
+            
     }
 
     def get(self, request, user_id):
@@ -268,7 +280,11 @@ class ProfileView(View):
         return JsonResponse(profile, status=200)
 
 
-    def put(self, request, *args, **kwargs):
+    def post(self, request, user_id):
+        if user_id != 'me':
+            return JsonResponse({
+                "message": "user_id is not 'me', access denied"
+            }, status=401)
         # input validation
         # if data does not pass validation we send response with errors
 
@@ -279,12 +295,11 @@ class ProfileView(View):
         else:
             data = json.loads(request.body)
             user = User.objects.filter(id=request.user.id).get()
-            if data["first_name"]:
-                user.first_name = data["first_name"]
-            if data["last_name"]:
-                user.last_name = data["last_name"]
+            user.first_name = data["first_name"]
+            user.last_name = data["last_name"]
+            
             user.save()
-            if data["email"]:
+            if data["email"] != user.email:
                 # sending confirmation letter to new email
                 token_generator = TokenGenerator()
                 confirmation_email = EmailSender()

@@ -21,7 +21,6 @@ class UpdateTest(TestCase):
             "first_name": first_name,
             "last_name": last_name,
             "username_or_email": username_or_email,
-            "email": email,
         }
         json_string = json.dumps(my_dict)
         return json_string
@@ -38,8 +37,9 @@ class UpdateTest(TestCase):
         resp2 = self.client.post(self.login_url, login_data, 
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
-        update_data = self.create_json_request(first_name="Andriy", last_name="Staythere")
-        resp3 = self.client.put(self.update_url,update_data,
+        update_data = self.create_json_request(first_name="Andriy", last_name="Staythere", 
+                    email="asd@mail.com")
+        resp3 = self.client.post(self.update_url,update_data,
                                  content_type="application/json")
         self.assertEqual(resp3.status_code, 201)
     
@@ -56,7 +56,7 @@ class UpdateTest(TestCase):
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
         update_data = self.create_json_request(first_name="Andriy", last_name="Staythere", email='123')
-        resp3 = self.client.put(self.update_url,update_data,
+        resp3 = self.client.post(self.update_url,update_data,
                                  content_type="application/json")
         self.assertEqual(resp3.status_code, 400)
 
@@ -68,7 +68,7 @@ class UpdateTest(TestCase):
         self.assertEqual(resp.status_code, 201)
         
         update_data = self.create_json_request(first_name="Andriy", last_name="Staythere", email='123@er.rt')
-        resp3 = self.client.put(self.update_url,update_data,
+        resp3 = self.client.post(self.update_url,update_data,
                                  content_type="application/json")
         self.assertEqual(resp3.status_code, 302)
 
@@ -83,8 +83,9 @@ class UpdateTest(TestCase):
         resp2 = self.client.post(self.login_url, login_data, 
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
-        update_data = self.create_json_request(first_name="Andriy")
-        resp3 = self.client.put(self.update_url,update_data,
+        update_data = self.create_json_request(first_name="Andriy", last_name="Doe", 
+                    email="asd@mail.com")
+        resp3 = self.client.post(self.update_url,update_data,
                                  content_type="application/json")
         self.assertEqual(resp3.status_code, 201)
 
@@ -100,8 +101,8 @@ class UpdateTest(TestCase):
         resp2 = self.client.post(self.login_url, login_data, 
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
-        update_data = self.create_json_request(first_name="Andriy", email="asd@fun.com")
-        resp3 = self.client.put(self.update_url,update_data,
+        update_data = self.create_json_request(first_name="Andriy", email="asd@fun.com", last_name="Doe")
+        resp3 = self.client.post(self.update_url,update_data,
                                  content_type="application/json")
         self.assertEqual(resp3.status_code, 202)
 
@@ -116,7 +117,7 @@ class UpdateTest(TestCase):
         resp2 = self.client.post(self.login_url, login_data, 
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
-        update_data = self.create_json_request(first_name="Andriy", email="asd@funcom")
-        resp3 = self.client.put(self.update_url,update_data,
+        update_data = self.create_json_request(first_name="Andriy", email="asd@funcom", last_name="Doe")
+        resp3 = self.client.post(self.update_url,update_data,
                                  content_type="application/json")
         self.assertEqual(resp3.status_code, 400)
