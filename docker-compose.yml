@@ -1,12 +1,12 @@
 version: '3'
 services:
     web:
-        build: .
+        build: happy_walker
         command: python3 manage.py runserver 0.0.0.0:8000
         ports:
         - "8000:8000"
         volumes:
-        - ./:/data
+        - ./happy_walker:/data
         depends_on:
           - db
     db:

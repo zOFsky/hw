@@ -56,7 +56,7 @@ class UpdateTest(TestCase):
 
         self.assertEqual(resp_email_changer.status_code, 201) 
 
-    def test_email_change_with_correct_email2(self):
+    def test_email_change_with_incorrect_email2(self):
         request_data = self.create_json_request(username='username1', password='abc1234', 
                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
