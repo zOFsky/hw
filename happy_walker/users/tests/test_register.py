@@ -1,4 +1,4 @@
-from django.test import TestCase, RequestFactory, Client
+from django.test import TestCase, Client
 from django.urls import reverse, resolve
 from home.views import homepage
 from django.http import HttpRequest
@@ -6,7 +6,6 @@ import json
 
 class RegisterTest(TestCase):
 
-  
     def setUp(self):
         self.registration_url = reverse('register')
         self.client = Client()

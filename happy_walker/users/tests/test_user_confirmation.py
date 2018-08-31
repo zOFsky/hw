@@ -1,4 +1,4 @@
-from django.test import TestCase, RequestFactory, Client
+from django.test import TestCase, Client
 from django.urls import reverse
 import json
 import mock
@@ -8,7 +8,7 @@ class UpdateTest(TestCase):
 
     def setUp(self):
         self.registration_url = reverse('register')
-        self.confirm_email = reverse('confirm_email')
+        self.confirm_email_url = reverse('confirm_email')
         self.client = Client()
         print("----------{}-----------".format(self._testMethodName))
 
@@ -40,7 +40,6 @@ class UpdateTest(TestCase):
             return False
 
     @mock.patch("users.tokens.TokenGenerator.check_token", fake_check_token)
-
     def test_confirm_email_api_with_correct_data_input(self):
         user = self.create_user('username1', 'abc1234', 'asd@mail.com',
                                                 'name', 'lastname')
@@ -49,10 +48,11 @@ class UpdateTest(TestCase):
         self.assertEqual(resp.status_code, 201)
         resp = json.loads(resp.content)
         email = self.create_email(str(resp['uid']), 'true')
-        resp2 = self.client.post(self.confirm_email, email,
+        resp2 = self.client.post(self.confirm_email_url, email,
                                 content_type="application/json")
         self.assertEqual(resp2.status_code, 200)
 
+    @mock.patch("users.tokens.TokenGenerator.check_token", fake_check_token)
     def test_confirm_email_api_with_invalid_token(self):
         user = self.create_user('username1', 'abc1234', 'asd@mail.com',
                                                 'name', 'lastname')
@@ -61,10 +61,11 @@ class UpdateTest(TestCase):
         self.assertEqual(resp.status_code, 201)
         resp = json.loads(resp.content)
         email = self.create_email(str(resp['uid']), 'false')
-        resp2 = self.client.post(self.confirm_email, email,
+        resp2 = self.client.post(self.confirm_email_url, email,
                                 content_type="application/json")
         self.assertEqual(resp2.status_code, 400)
 
+    @mock.patch("users.tokens.TokenGenerator.check_token", fake_check_token)
     def test_confirm_email_api_with_invalid_user_id(self):
         user = self.create_user('username1', 'abc1234', 'asd@mail.com',
                                                 'name', 'lastname')
@@ -73,6 +74,6 @@ class UpdateTest(TestCase):
         self.assertEqual(resp.status_code, 201)
         resp = json.loads(resp.content)
         email = self.create_email('1782', 'true')
-        resp2 = self.client.post(self.confirm_email, email,
+        resp2 = self.client.post(self.confirm_email_url, email,
                                 content_type="application/json")
         self.assertEqual(resp2.status_code, 400)

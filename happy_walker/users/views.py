@@ -63,7 +63,7 @@ class UserRegisterView(View):
             #if user doesn't exist we create him with data
             User.objects.create_user(username=data['username'], email=data['email'],
                 password=data['password'], first_name=data['first_name'],
-                last_name=data['last_name'], is_active=True)
+                last_name=data['last_name'], is_active=False)
 
             # send email
             user = User.objects.get(username=data['username'])
@@ -131,7 +131,7 @@ class ConfirmEmailView(View):
                 "message": "user successfully activated"
             }, status=200)
         else:
-            return HttpResponseBadRequest({
+            return JsonResponse({
                 "message": "activation link is invalid"
             }, status=400)
 
@@ -279,7 +279,7 @@ class ProfileView(View):
         return JsonResponse(profile, status=200)
 
 
-    def put(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         # input validation
         # if data does not pass validation we send response with errors
 
@@ -310,9 +310,7 @@ class ProfileView(View):
                 confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
 
                 return JsonResponse({
-                    "message": "please confirm your new email",
-                    "token": context["token"],
-                    "uid": context["uid"],
+                    "message": "please confirm your new email"
                 }, status=202)
             return JsonResponse({
                 "message": "user successfully updated"
