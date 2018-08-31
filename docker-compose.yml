@@ -6,7 +6,7 @@ services:
         ports:
         - "8000:8000"
         volumes:
-        - ./happy_walker:/data
+        - ./:/data
         depends_on:
           - db
     db:
