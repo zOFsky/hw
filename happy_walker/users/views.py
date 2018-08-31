@@ -80,6 +80,7 @@ class UserRegisterView(View):
             confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
 
             return JsonResponse({
+                "uid": user.id,
                 "message" : "user successfully created",
                 }, status=201)
         # in case username or email already exists in database we return that message
@@ -115,7 +116,12 @@ class ConfirmEmailView(View):
 
         uid = data['uid']
         token = data['token']
-        user = User.objects.get(id=uid)
+        try:
+            user = User.objects.get(id=uid)
+        except ObjectDoesNotExist:
+            return JsonResponse({
+                "message": "This user does not exist",
+            }, status=400)
         token_generator = TokenGenerator()
         if token_generator.check_token(user, token):
             User.objects.filter(id=uid).update(is_active='True')
@@ -161,7 +167,12 @@ class ChangeEmailView(View):
         uid = data['uid']
         token = data['token']
         new_email = data['new_email']
-        user = User.objects.get(id=uid)
+        try:
+            user = User.objects.get(id=uid)
+        except ObjectDoesNotExist:
+            return JsonResponse({
+                "message": "This user does not exist",
+            }, status=400)
         token_generator = TokenGenerator()
         if token_generator.check_token(user, token):
             User.objects.filter(id=uid).update(email=new_email)
