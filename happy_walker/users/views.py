@@ -176,7 +176,6 @@ class ChangeEmailView(View):
         token_generator = TokenGenerator()
         if token_generator.check_token(user, token):
             User.objects.filter(id=uid).update(email=new_email)
-            login(request, user)
             return JsonResponse({
                 "id": uid,
                 "new_email": new_email,
@@ -233,6 +232,8 @@ class UserLoginView(View):
                                              password=data['password'])
             if user is not None:
                 login(request, user)
+                if not request.session.exists(request.session.session_key):
+                    request.session.create() 
                 return JsonResponse({
                     "message": "login successfull",
                     "token": request.session.session_key
@@ -254,6 +255,18 @@ class ProfileView(View):
             'type': 'string',
             'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
         },
+        'first_name':{
+            'required': True,
+            'type': 'string',
+            'empty': False,
+        },
+        
+        'last_name':{
+            'required': True,
+            'type': 'string',
+            'empty': False,
+        }
+            
     }
 
     def get(self, request, user_id):
@@ -279,7 +292,11 @@ class ProfileView(View):
         return JsonResponse(profile, status=200)
 
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request, user_id):
+        if user_id != 'me':
+            return JsonResponse({
+                "message": "user_id is not 'me', access denied"
+            }, status=401)
         # input validation
         # if data does not pass validation we send response with errors
 
@@ -290,23 +307,23 @@ class ProfileView(View):
         else:
             data = json.loads(request.body)
             user = User.objects.filter(id=request.user.id).get()
-            if data["first_name"]:
-                user.first_name = data["first_name"]
-            if data["last_name"]:
-                user.last_name = data["last_name"]
+            user.first_name = data["first_name"]
+            user.last_name = data["last_name"]
+            
             user.save()
-            if data["email"]:
+            if data["email"] != user.email:
                 # sending confirmation letter to new email
                 token_generator = TokenGenerator()
                 confirmation_email = EmailSender()
                 context = {
                     'uid': user.id,
                     'token': token_generator.make_token(user),
+                    'new_email': data["email"]
                 }
                 email = data['email']
                 mail_subject = 'Email change confirmation'
-                html_email = get_template('acc_active_email.html')
-                text_email = get_template('acc_active_email')
+                html_email = get_template('change_email.html')
+                text_email = get_template('change_email')
                 confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
 
                 return JsonResponse({

@@ -64,7 +64,7 @@ class UpdateTest(TestCase):
         resp2 = self.client.post(self.login_url, login_data, 
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
-        update_data = self.create_json_request(first_name="Andriy", email="asd@fun.com")
+        update_data = self.create_json_request(first_name="Jane", email="asd@fun.com", last_name="Doe")
         resp3 = self.client.post(self.update_url,update_data,
                                  content_type="application/json")
         self.assertEqual(resp3.status_code, 202)
@@ -92,7 +92,7 @@ class UpdateTest(TestCase):
         resp2 = self.client.post(self.login_url, login_data, 
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
-        update_data = self.create_json_request(first_name="Andriy", email="asd@fun.com")
+        update_data = self.create_json_request(first_name="Andriy", email="asd@fun.com", last_name="Doe")
         resp3 = self.client.post(self.update_url,update_data,
                                  content_type="application/json")
         self.assertEqual(resp3.status_code, 202)
