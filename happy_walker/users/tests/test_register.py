@@ -41,7 +41,7 @@ class RegisterTest(TestCase):
                    'random', 'random')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
-        self.assertEqual(resp.status_code, 2010)
+        self.assertEqual(resp.status_code, 201)
     
     def test_registration_with_password_too_short(self):
         request_data = self.create_json_request('username2', 'abc14', 'basd@mail.com',
