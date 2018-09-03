@@ -6,6 +6,6 @@ jobs:
     - checkout
     - run: docker-compose build
     - run: docker-compose up -d
-    - run:
-        command: |
-          python3 manage.py test
+    # - run:
+    #     command: |
+    #       python3 manage.py test
