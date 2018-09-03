@@ -5,4 +5,4 @@ jobs:
     steps:
     - checkout
     - run: docker-compose build
-    - run: docker-compose up
+    - run: docker-compose up -d
