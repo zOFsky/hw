@@ -5,8 +5,7 @@ jobs:
     steps:
     - checkout
     - run: docker-compose build
-    - run: docker-compose up -d
-    - run: docker-compose.test
+    - run: docker-compose up
     # - run:
     #     command: |
     #       python3 manage.py test

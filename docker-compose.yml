@@ -13,4 +13,13 @@ services:
         image: mongo
         ports:
         - 27017:27017
-    
+    test:
+         build: happy_walker
+         command: python3 manage.py test
+         volumes:
+         - ./happy_walker:/data
+         depends_on:
+           - db
+           - web
+
+         
