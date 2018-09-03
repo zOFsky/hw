@@ -1,13 +1,15 @@
-from django.test import TestCase, RequestFactory, Client
-from django.urls import reverse, resolve
+from django.test import TestCase, Client
+from django.urls import reverse
 import json
-#will remove
+import mock
+
 class LoginTest(TestCase):
 
   
     def setUp(self):
         self.registration_url = reverse('register')
         self.login_url = reverse('login')
+        self.confirm_email_url = reverse('confirm_email')
         self.client = Client()
         print("----------{}-----------".format(self._testMethodName))
 
@@ -25,41 +27,74 @@ class LoginTest(TestCase):
         json_string = json.dumps(my_dict)
         return json_string
 
-    
+    def create_email(self, id, token):
+
+        my_dict = {
+            "uid": id,
+            "token": token,
+        }
+        json_string = json.dumps(my_dict)
+        return json_string
+
+    def fake_check_token(self, user, token):
+        if token == 'true':
+            return True
+        else:
+            return False
+
+    @mock.patch("users.tokens.TokenGenerator.check_token", fake_check_token)
     def test_login_api_with_correct_data_input(self):
         request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com',
                                                 'name', 'lastname')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
+        resp = json.loads(resp.content)
+        email = self.create_email(str(resp['uid']), 'true')
+        resp2 = self.client.post(self.confirm_email_url, email,
+                                 content_type="application/json")
+        self.assertEqual(resp2.status_code, 200)
         login_data = self.create_json_request(username_or_email='username1',
                              password='abc1234')
-        resp2 = self.client.post(self.login_url, login_data, 
+        resp3 = self.client.post(self.login_url, login_data,
                                  content_type="application/json")
-        self.assertEqual(resp2.status_code, 230)
-    
+        self.assertEqual(resp3.status_code, 230)
+
+    @mock.patch("users.tokens.TokenGenerator.check_token", fake_check_token)
     def test_login_with_no_password(self):
-        request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com', 'r', 'r')
+        request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com',
+                                                'name', 'lastname')
         resp = self.client.post(self.registration_url, request_data,
-             content_type="application/json")
+                                content_type="application/json")
         self.assertEqual(resp.status_code, 201)
+        resp = json.loads(resp.content)
+        email = self.create_email(str(resp['uid']), 'true')
+        resp2 = self.client.post(self.confirm_email_url, email,
+                                 content_type="application/json")
+        self.assertEqual(resp2.status_code, 200)
         login_data = self.create_json_request(username_or_email='username1',
                              password='')
-        resp2 = self.client.post(self.login_url, login_data, 
+        resp3 = self.client.post(self.login_url, login_data,
                                  content_type="application/json")
-        self.assertEqual(resp2.status_code, 400)
+        self.assertEqual(resp3.status_code, 400)
 
+    @mock.patch("users.tokens.TokenGenerator.check_token", fake_check_token)
     def test_login_with_email(self):
         request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com', 'r', 'r')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
+        resp = json.loads(resp.content)
+        email = self.create_email(str(resp['uid']), 'true')
+        resp2 = self.client.post(self.confirm_email_url, email,
+                                 content_type="application/json")
+        self.assertEqual(resp2.status_code, 200)
         login_data = self.create_json_request(username_or_email='asd@mail.com',
                              password='abc1234')
-        resp2 = self.client.post(self.login_url, login_data, 
+        resp3 = self.client.post(self.login_url, login_data,
                                  content_type="application/json")
-        self.assertEqual(resp2.status_code, 230)
-    
+        self.assertEqual(resp3.status_code, 230)
+
     def test_login_with_empty_data(self):
         login_data = self.create_json_request(username_or_email=None,
                              password=None)
@@ -67,17 +102,22 @@ class LoginTest(TestCase):
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 400)
 
+    @mock.patch("users.tokens.TokenGenerator.check_token", fake_check_token)
     def test_login_with_wrong_password(self):
         request_data = self.create_json_request('username1', 'abc1234', 'asd@mail.com', 'r', 'r')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
+        resp = json.loads(resp.content)
+        email = self.create_email(str(resp['uid']), 'true')
+        resp2 = self.client.post(self.confirm_email_url, email,
+                                 content_type="application/json")
+        self.assertEqual(resp2.status_code, 200)
         login_data = self.create_json_request(username_or_email='username1',
                              password='abcd1234')
-        resp2 = self.client.post(self.login_url, login_data, 
+        resp3 = self.client.post(self.login_url, login_data,
                                  content_type="application/json")
-        self.assertEqual(resp2.status_code, 467)
-    
+        self.assertEqual(resp3.status_code, 467)
 
     def test_login_with_no_email_or_username(self):
         request_data = self.create_json_request(password='abc4234')
