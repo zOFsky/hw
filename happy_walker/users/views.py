@@ -63,7 +63,7 @@ class UserRegisterView(View):
             #if user doesn't exist we create him with data
             User.objects.create_user(username=data['username'], email=data['email'],
                 password=data['password'], first_name=data['first_name'],
-                last_name=data['last_name'], is_active=True)
+                last_name=data['last_name'], is_active=False)
 
             # send email
             user = User.objects.get(username=data['username'])
@@ -80,6 +80,7 @@ class UserRegisterView(View):
             confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
 
             return JsonResponse({
+                "uid": user.id,
                 "message" : "user successfully created",
                 }, status=201)
         # in case username or email already exists in database we return that message
@@ -115,7 +116,12 @@ class ConfirmEmailView(View):
 
         uid = data['uid']
         token = data['token']
-        user = User.objects.get(id=uid)
+        try:
+            user = User.objects.get(id=uid)
+        except ObjectDoesNotExist:
+            return JsonResponse({
+                "message": "This user does not exist",
+            }, status=400)
         token_generator = TokenGenerator()
         if token_generator.check_token(user, token):
             User.objects.filter(id=uid).update(is_active='True')
@@ -125,7 +131,7 @@ class ConfirmEmailView(View):
                 "message": "user successfully activated"
             }, status=200)
         else:
-            return HttpResponseBadRequest({
+            return JsonResponse({
                 "message": "activation link is invalid"
             }, status=400)
 
@@ -161,11 +167,15 @@ class ChangeEmailView(View):
         uid = data['uid']
         token = data['token']
         new_email = data['new_email']
-        user = User.objects.get(id=uid)
+        try:
+            user = User.objects.get(id=uid)
+        except ObjectDoesNotExist:
+            return JsonResponse({
+                "message": "This user does not exist",
+            }, status=400)
         token_generator = TokenGenerator()
         if token_generator.check_token(user, token):
             User.objects.filter(id=uid).update(email=new_email)
-            login(request, user)
             return JsonResponse({
                 "id": uid,
                 "new_email": new_email,
@@ -241,9 +251,9 @@ class ProfileView(View):
 
     validation_schema = {
         'email': {
-                'empty': True,
-                'type': 'string', 
-                'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+            'empty': True,
+            'type': 'string',
+            'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
         },
         'first_name':{
             'required': True,
@@ -308,17 +318,16 @@ class ProfileView(View):
                 context = {
                     'uid': user.id,
                     'token': token_generator.make_token(user),
+                    'new_email': data["email"]
                 }
                 email = data['email']
                 mail_subject = 'Email change confirmation'
-                html_email = get_template('acc_active_email.html')
-                text_email = get_template('acc_active_email')
+                html_email = get_template('change_email.html')
+                text_email = get_template('change_email')
                 confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
 
                 return JsonResponse({
-                    "message": "please confirm your new email",
-                    "token": context["token"],
-                    "uid": context["uid"],
+                    "message": "please confirm your new email"
                 }, status=202)
             return JsonResponse({
                 "message": "user successfully updated"
