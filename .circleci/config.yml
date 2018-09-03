@@ -1,0 +1,9 @@
+version: 2
+jobs:
+  build:
+    machine: true
+      - image: circleci/classic:latest
+    steps:
+    - checkout
+    - run: docker-compose build
+    - run: docker-compose up
