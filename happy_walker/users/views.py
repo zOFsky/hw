@@ -308,6 +308,7 @@ class ProfileView(View):
                 context = {
                     'uid': user.id,
                     'token': token_generator.make_token(user),
+                    'new_email': data["email"]
                 }
                 email = data['email']
                 mail_subject = 'Email change confirmation'
