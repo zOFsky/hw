@@ -1,0 +1,10 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    steps:
+    - checkout
+    - run: docker-compose build
+    - run: docker-compose run --rm web python3 manage.py test
+    - run: docker-compose up -d
+    
