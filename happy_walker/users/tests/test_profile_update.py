@@ -21,7 +21,7 @@ class UpdateTest(TestCase):
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_update_api_with_correct_data_input(self):
         request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mail.com', first_name='r', last_name='r')
+                                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
@@ -44,7 +44,7 @@ class UpdateTest(TestCase):
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_update_api_with_incorrect_email(self):
         request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mail.com', first_name='r', last_name='r')
+                                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
@@ -72,7 +72,7 @@ class UpdateTest(TestCase):
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_update_api_with_correct_data_checking_functionality(self):
         request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mail.com', first_name='r', last_name='r')
+                                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
@@ -95,7 +95,7 @@ class UpdateTest(TestCase):
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_update_api_with_correct_email(self):
         request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mail.com', first_name='r', last_name='r')
+                                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
@@ -117,7 +117,7 @@ class UpdateTest(TestCase):
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_update_api_with_incorrect_email(self):
         request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mail.com', first_name='r', last_name='r')
+                                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)

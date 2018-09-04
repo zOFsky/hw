@@ -20,7 +20,7 @@ class LoginTest(TestCase):
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_login_api_with_correct_data_input(self):
         request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                email='asd@mail.com', first_name='r', last_name='r')
+                                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
@@ -38,7 +38,7 @@ class LoginTest(TestCase):
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_login_with_no_password(self):
         request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                email='asd@mail.com', first_name='r', last_name='r')
+                                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
                                 content_type="application/json")
         self.assertEqual(resp.status_code, 201)
@@ -56,7 +56,7 @@ class LoginTest(TestCase):
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_login_with_email(self):
         request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                email='asd@mail.com', first_name='r', last_name='r')
+                                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
@@ -81,7 +81,7 @@ class LoginTest(TestCase):
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_login_with_wrong_password(self):
         request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                email='asd@mail.com', first_name='r', last_name='r')
+                                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
