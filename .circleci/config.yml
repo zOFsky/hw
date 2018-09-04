@@ -8,6 +8,7 @@ jobs:
     - run: docker-compose run --rm web python3 manage.py test
     - run: docker-compose up -d
   deploy:
+    machine: true
     steps:
       - checkout
       - run:
