@@ -1,1 +1,1 @@
-web: python3 ./happy_walker/manage.py runserver 0.0.0.0:$PORT
+web: python3 happy_walker/manage.py runserver 0.0.0.0:$PORT

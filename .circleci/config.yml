@@ -22,5 +22,4 @@ workflows:
       - build
       - deploy:
           requires:
-            - build
-#commetns        
+            - build        
