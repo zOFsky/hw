@@ -4,7 +4,7 @@ services:
         build: happy_walker
         command: uwsgi --ini uwsgi.ini
         ports:
-        - "8000:8000"
+        - "8000:$PORT"
         volumes:
         - ./happy_walker:/data
         depends_on:
