@@ -1,6 +1,6 @@
 FROM alpine
 RUN apk add python3
-RUN apk add gcc
+RUN apk add clang
 RUN pip3 install --upgrade pip
 RUN mkdir /data
 WORKDIR /data
