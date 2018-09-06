@@ -5,8 +5,8 @@ jobs:
     steps:
     - checkout
     - run: docker-compose build
-    - run: docker-compose run --rm web uwsgi --ini uwsgi.ini
-    - run: docker-compose up -d
+    - run: docker-compose run --rm web python3 manage.py test
+    - run: docker-compose run -d web uwsgi --ini uwsgi.ini
   deploy:
     machine: true
     steps:
