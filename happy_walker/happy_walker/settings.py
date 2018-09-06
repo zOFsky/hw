@@ -10,7 +10,7 @@ SECRET_KEY = '!s%$qa&cn7e$n$3$7lb_e#3o8@5fls+2q5y$q&06$7+h3slu8o'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'a-prod-backend-happy-walker.herokuapp.com']
 
 
 # Application definition
