@@ -1,6 +1,9 @@
 FROM alpine
-RUN apk add python3
-RUN pip install --upgrade pip
+RUN apk add python3-dev \
+            gcc \
+		    libc-dev \
+		    linux-headers
+RUN pip3 install --upgrade pip
 RUN mkdir /data
 WORKDIR /data
 ADD requirements.txt /data
