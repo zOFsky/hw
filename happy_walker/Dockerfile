@@ -9,4 +9,4 @@ WORKDIR /data
 ADD requirements.txt /data
 RUN pip3 install -r requirements.txt
 ADD . /data
-CMD uwsgi uwsgi.ini
+CMD uwsgi tesi.ini
