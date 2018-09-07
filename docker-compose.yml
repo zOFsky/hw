@@ -2,7 +2,7 @@ version: '3'
 services:
     web:
         build: happy_walker
-        command: uwsgi uwsgi.ini
+        command: uwsgi pipa.ini
         ports:
         - "8000:8000"
         volumes:
