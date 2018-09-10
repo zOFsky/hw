@@ -1,1 +1,1 @@
-web: uwsgi happy_walker/uwsgi.ini
+web: uwsgi uwsgi.ini
