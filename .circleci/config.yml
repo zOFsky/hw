@@ -10,7 +10,7 @@ jobs:
     - run: docker-compose run -d web uwsgi uwsgi.ini 
   deploy:
     docker:
-      - image: .
+      - image: ../.
     steps:
       - checkout
       - run:
