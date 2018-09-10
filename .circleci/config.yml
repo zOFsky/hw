@@ -6,7 +6,7 @@ jobs:
     - checkout
     - run: docker-compose build
     - run: docker-compose run --rm web python3 manage.py test
-    - run: docker-compose run db
+    - run: docker-compose run -d db
     - run: docker-compose run -d web uwsgi uwsgi.ini 
   deploy:
     machine: true
