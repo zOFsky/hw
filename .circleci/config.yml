@@ -9,7 +9,8 @@ jobs:
     - run: docker-compose run -d db
     - run: docker-compose run -d web uwsgi uwsgi.ini 
   deploy:
-    machine: true
+    docker:
+      - image: .
     steps:
       - checkout
       - run:
