@@ -9,4 +9,4 @@ WORKDIR /data
 ADD requirements.txt /data
 RUN pip3 install -r requirements.txt
 ADD /happy_walker /data
-CMD uwsgi dockeruwsgi.ini
+CMD uwsgi happy_walker/uwsgi.ini
