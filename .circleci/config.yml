@@ -23,6 +23,8 @@ jobs:
     docker:
       - image: circleci/python:3.6.6
       - image: circleci/mongo:latest
+    steps:
+    - checkout  
     - run: # run tests
         command: |
           . venv/bin/activate
@@ -48,4 +50,5 @@ workflows:
           - build
       - deploy:
           requires:
+            - build
             - test        
