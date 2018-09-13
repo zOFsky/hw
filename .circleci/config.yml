@@ -4,7 +4,8 @@ jobs:
     working_directory: ~/python-django 
     docker:
       - image: circleci/python:3.6.6
-      - image: circleci/mongo:latest    
+      - image: circleci/mongo:latest 
+        command: [mongod, --smallfiles]
     steps: 
     - checkout 
     - restore_cache: 
