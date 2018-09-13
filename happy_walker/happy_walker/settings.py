@@ -10,7 +10,8 @@ SECRET_KEY = '!s%$qa&cn7e$n$3$7lb_e#3o8@5fls+2q5y$q&06$7+h3slu8o'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'a-prod-backend-happy-walker.herokuapp.com']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'a-qa-backend-happy-walker.herokuapp.com', 
+                'heppy-walkernew.herokuapp.com']
 
 
 # Application definition
@@ -21,11 +22,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'home',
     'users',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -59,10 +62,13 @@ WSGI_APPLICATION = 'happy_walker.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': 'mongodb',
-        'HOST': 'db',
-        'PORT': 27017,
-    }
+        'NAME': 'heroku_bcnr4g6v',
+        'HOST': 'ds245512.mlab.com',
+        'PORT': 45512,
+        'USER': 'User',
+        'PASSWORD': 'qwerty123',
+        'AUTH_SOURCE': 'heroku_bcnr4g6v',
+        }
 }
 
 
@@ -106,7 +112,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATIC_URL = '/static/'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'my0valium@gmail.com'
+EMAIL_HOST_PASSWORD = 'basok123'
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 # Activate Django-Heroku.
 #django_heroku.settings(locals())
