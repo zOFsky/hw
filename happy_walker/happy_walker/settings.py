@@ -129,3 +129,4 @@ EMAIL_HOST_PASSWORD = 'basok123'
 
 CORS_ORIGIN_ALLOW_ALL = True
 
+#comment
