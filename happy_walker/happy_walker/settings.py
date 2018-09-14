@@ -57,18 +57,29 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'happy_walker.wsgi.application'
 
-
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': 'heroku_bcnr4g6v',
-        'HOST': 'ds245512.mlab.com',
-        'PORT': 45512,
-        'USER': 'User',
-        'PASSWORD': 'qwerty123',
-        'AUTH_SOURCE': 'heroku_bcnr4g6v',
-        }
+        'HOST': os.environ['DB_HOST'],
+        'PORT': os.environ['DB_PORT'],
+        'NAME': os.environ['DB_NAME'],
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASS'],
+        'AUTH_SOURCE': os.environ['AUTH_SOURCE'],
+    }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'djongo',
+#         'NAME': 'heroku_bcnr4g6v',
+#         'HOST': 'ds245512.mlab.com',
+#         'PORT': 45512,
+#         'USER': 'User',
+#         'PASSWORD': 'qwerty123',
+#         'AUTH_SOURCE': 'heroku_bcnr4g6v',
+#         }
+# }
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'djongo',
@@ -77,6 +88,7 @@ DATABASES = {
 #         'PORT': 27017,
 #     }
 # }
+
 #hello again
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
