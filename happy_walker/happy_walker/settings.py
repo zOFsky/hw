@@ -70,7 +70,7 @@ DATABASES = {
         'AUTH_SOURCE': 'heroku_bcnr4g6v',
         }
 }
-
+#hello again
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
 
