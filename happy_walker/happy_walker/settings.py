@@ -57,17 +57,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'happy_walker.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        'HOST': os.environ['DB_HOST'],
-        'PORT': int(os.environ['DB_PORT']),
-        'NAME': os.environ['DB_NAME'],
-        'USER': os.environ['DB_USER'],
-        'PASSWORD': os.environ['DB_PASS'],
-        'AUTH_SOURCE': os.environ['AUTH_SOURCE'],
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'djongo',
+#         'HOST': os.environ['DB_HOST'],
+#         'PORT': int(os.environ['DB_PORT']),
+#         'NAME': os.environ['DB_NAME'],
+#         'USER': os.environ['DB_USER'],
+#         'PASSWORD': os.environ['DB_PASS'],
+#         'AUTH_SOURCE': os.environ['AUTH_SOURCE'],
+#     }
+# }
 
 # DATABASES = {
 #     'default': {
@@ -80,14 +80,14 @@ DATABASES = {
 #         'AUTH_SOURCE': 'heroku_bcnr4g6v',
 #         }
 # }
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'djongo',
-#         'NAME': 'mongodb',
-#        # 'HOST': 'db',
-#         'PORT': 27017,
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'djongo',
+        'NAME': 'mongodb',
+       # 'HOST': 'db',
+        'PORT': 27017,
+    }
+}
 
 #hello again
 # Password validation
