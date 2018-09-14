@@ -22,22 +22,22 @@ jobs:
           paths:
             - "venv"
       - run:
-           name: "Setup env variables"
-           comand: bash db_test_setting.sh
+          name: Setup env variables
+          comand: bash db_test_setting.sh
       - run: # run tests
-           command: |
-             . venv/bin/activate
-             cd happy_walker
-             python3 manage.py test
+          command: |
+            . venv/bin/activate
+            cd happy_walker
+            python3 manage.py test
       - store_artifacts:
-           path: test-reports/
-           destination: tr1
+          path: test-reports/
+          destination: tr1
   deploy:
     machine: true
     steps:
       - checkout
       - run:
-          name: "Setup env variables"
+          name: Setup env variables
           comand: bash db_prod_setting.sh
       - run:
           name: Deploy Master to Heroku
