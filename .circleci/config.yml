@@ -25,7 +25,7 @@ jobs:
           name: Setup env variables
           command: |
             cd happy_walker
-            bash db_test_setting.sh
+            bash ./db_test_setting.sh
       - run: # run tests
           command: |
             . venv/bin/activate
@@ -42,7 +42,7 @@ jobs:
           name: Setup env variables
           command: |
             cd happy_walker
-            bash db_prod_setting.sh
+            bash ./db_prod_setting.sh
       - run:
           name: Deploy Master to Heroku
           command: |
