@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/python-django
     docker:
-      - image: circleci/python:3.6.6
+      - image: circleci/python:3.6.5
       - image: circleci/mongo:latest 
     steps: 
       - checkout 
@@ -20,7 +20,7 @@ jobs:
             - "venv"
   test:
     docker:
-      - image: circleci/python:3.6.6
+      - image: circleci/python:3.6.5
       - image: circleci/mongo:latest
     steps:
       - run: # run tests
