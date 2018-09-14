@@ -3,3 +3,4 @@ djongo==1.2.29
 cerberus==1.2
 mock==2.0.0
 uwsgi==2.0.17
+django-cors-headers
