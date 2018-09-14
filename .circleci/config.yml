@@ -22,9 +22,10 @@ jobs:
           paths:
             - "venv"
       - run: # run tests
-          # command: |
-          #   . venv/bin/activate
-            python3 happy_walker/manage.py test
+          command: |
+            . venv/bin/activate
+            cd happy_walker
+            python3 manage.py test
       - store_artifacts: 
           path: test-reports/
           destination: tr1
