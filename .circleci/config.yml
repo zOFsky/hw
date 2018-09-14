@@ -21,11 +21,6 @@ jobs:
           key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
           paths:
             - "venv"
-      - run:
-          name: Setup env variables
-          command: |
-            cd happy_walker
-            bash ./db_test_setting.sh
       - run: # run tests
           command: |
             . venv/bin/activate
@@ -38,11 +33,6 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run:
-          name: Setup env variables
-          command: |
-            cd happy_walker
-            bash ./db_prod_setting.sh
       - run:
           name: Deploy Master to Heroku
           command: |
