@@ -23,7 +23,7 @@ jobs:
             - "venv"
       - run:
           name: Setup env variables
-          comand: bash db_test_setting.sh
+          command: bash db_test_setting.sh
       - run: # run tests
           command: |
             . venv/bin/activate
