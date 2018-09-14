@@ -21,15 +21,15 @@ jobs:
           key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
           paths:
             - "venv"
-       - run:
+      - run:
            name: "Setup env variables"
            comand: bash db_test_setting.sh
-       - run: # run tests
+      - run: # run tests
            command: |
              . venv/bin/activate
              cd happy_walker
              python3 manage.py test
-       - store_artifacts:
+      - store_artifacts:
            path: test-reports/
            destination: tr1
   deploy:
