@@ -21,14 +21,14 @@ jobs:
           key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
           paths:
             - "venv"
-      - run: # run tests
-          command: |
-            . venv/bin/activate
-            cd happy_walker
-            python3 manage.py test
-      - store_artifacts: 
-          path: test-reports/
-          destination: tr1
+      # - run: # run tests
+      #     command: |
+      #       . venv/bin/activate
+      #       cd happy_walker
+      #       python3 manage.py test
+      # - store_artifacts: 
+      #     path: test-reports/
+      #     destination: tr1
   deploy:
     machine: true
     steps:
