@@ -57,7 +57,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'happy_walker.wsgi.application'
 
-if os.environ['DB_HOST'] != '27017':
+if "DB_HOST" in os.environ:
     DATABASES = {
         'default': {
             'ENGINE': 'djongo',
