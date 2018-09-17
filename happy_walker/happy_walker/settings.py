@@ -112,6 +112,6 @@ try:
     # if ENV == 'PROD':
     #     from . import prod_settings
     # elif ENV == 'QA':
-    from . import qa_settings
+    import qa_settings
 except:
     pass
