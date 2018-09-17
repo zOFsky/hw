@@ -10,9 +10,7 @@ SECRET_KEY = '!s%$qa&cn7e$n$3$7lb_e#3o8@5fls+2q5y$q&06$7+h3slu8o'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'a-qa-backend-happy-walker.herokuapp.com', 
-                'heppy-walkernew.herokuapp.com']
-
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -58,27 +56,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'happy_walker.wsgi.application'
 
-if "DB_HOST" in os.environ:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'djongo',
-            'HOST': os.environ['DB_HOST'],
-            'PORT': int(os.environ['DB_PORT']),
-            'NAME': os.environ['DB_NAME'],
-            'USER': os.environ['DB_USER'],
-            'PASSWORD': os.environ['DB_PASS'],
-            'AUTH_SOURCE': os.environ['AUTH_SOURCE'],
-        }
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'djongo',
-            'NAME': 'mongodb',
-            # 'HOST': 'db',
-            'PORT': 27017,
-        }
-    }
+DATABASES = {
+       'default': {
+           'ENGINE': 'djongo',
+           'NAME': 'mongodb',
+           'HOST': 'db',
+           'PORT': 27017,
+       }
+   }
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
@@ -120,12 +105,13 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATIC_URL = '/static/'
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'my0valium@gmail.com'
-EMAIL_HOST_PASSWORD = 'basok123'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-CORS_ORIGIN_ALLOW_ALL = True
-
+try:
+    ENV = os.environ['ENV']
+    if ENV == 'PROD':
+        import prod_settings
+    elif ENV == 'QA':
+        import qa_settings
+except:
+    pass
