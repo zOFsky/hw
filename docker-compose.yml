@@ -2,7 +2,7 @@ version: '3'
 services:
     web:
         build: .
-        command: uwsgi happy_walker/uwsgi.ini
+        command: uwsgi --http :8000 --module happy_walker.wsgi
         ports:
         - "8000:8000"
         volumes:
