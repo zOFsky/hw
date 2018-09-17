@@ -1,8 +1,8 @@
 version: '3'
 services:
     web:
-        build: happy_walker
-        command: python3 manage.py runserver 0.0.0.0:8000
+        build: .
+        command: uwsgi happy_walker/uwsgi.ini
         ports:
         - "8000:8000"
         volumes:
