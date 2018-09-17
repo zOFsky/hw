@@ -109,9 +109,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 try:
     ENV = os.environ['ENV']
-    if ENV == 'PROD':
-        from . import prod_settings
-    elif ENV == 'QA':
-        from . import qa_settings
+    # if ENV == 'PROD':
+    #     from . import prod_settings
+    # elif ENV == 'QA':
+    from . import qa_settings
 except:
     pass
