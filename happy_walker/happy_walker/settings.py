@@ -2,8 +2,7 @@ import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STATIC_DIR = os.path.join(BASE_DIR, 'static'
-)
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '!s%$qa&cn7e$n$3$7lb_e#3o8@5fls+2q5y$q&06$7+h3slu8o'
 
@@ -102,8 +101,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
 STATIC_URL = '/static/'
+# STATICFILES_DIRS = [
+#     STATIC_DIR,
+# ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
