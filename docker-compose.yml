@@ -2,7 +2,7 @@ version: '3'
 services:
     web:
         build: .
-        command: uwsgi --http :8000 --module happy_walker.wsgi
+        command: python3 manage.py runserver 0.0.0.0:8000
         ports:
         - "8000:8000"
         volumes:
