@@ -72,6 +72,7 @@ class UserRegisterView(View):
             context = {
                 'uid': user.id,
                 'token': token_generator.make_token(user),
+                'host': request.get_host(),
             }
             email = user.email
             mail_subject = 'Activate your HappyWalker account'

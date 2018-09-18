@@ -106,6 +106,7 @@ STATIC_URL = '/static/'
 #     STATIC_DIR,
 # ]
 
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 try:
