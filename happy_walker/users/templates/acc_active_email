@@ -1,6 +1,6 @@
 {% autoescape on %}
 Welcome to Happy Walker
 Thanks for signing up. To send your first campaign, please verify your email address by clicking the button below
-{{host}}/confirmation_email?uid={{uid}}&token={{token}}
+https://a-qa-frontend-happy-walker.herokuapp.com//confirmation_email?uid={{uid}}&token={{token}}
 Thanks, Happy Walker Team
 {% endautoescape %}
