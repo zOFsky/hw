@@ -40,6 +40,21 @@ class RegisterTest(TestCase):
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
+
+    def test_registration_with_username_too_short(self):
+        request_data = self.methods.create_json_request(username='1', password='abc4defg',
+                                                        email='asd@mail.com', last_name="Smith", first_name="John")
+        resp = self.client.post(self.registration_url, request_data,
+             content_type="application/json")
+        self.assertEqual(resp.status_code, 400)
+
+    
+    def test_registration_with_username_wrong_char(self):
+        request_data = self.methods.create_json_request(username='1der@pes', password='abc4defg',
+                                                        email='asd@mail.com', last_name="Smith", first_name="John")
+        resp = self.client.post(self.registration_url, request_data,
+             content_type="application/json")
+        self.assertEqual(resp.status_code, 400)
     
     def test_registration_with_incorrect_email(self):
         request_data = self.methods.create_json_request(username='username1', password='abc1234',
