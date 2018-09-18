@@ -79,10 +79,12 @@ class UserRegisterView(View):
             text_email = get_template('acc_active_email')
             confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
 
-            return JsonResponse({
+            response = JsonResponse({
                 "uid": user.id,
                 "message" : "user successfully created",
                 }, status=201)
+            response.set_cookie('test_cookie', 'test_cookie')
+            return response
         # in case username or email already exists in database we return that message
         else:
             return JsonResponse({
