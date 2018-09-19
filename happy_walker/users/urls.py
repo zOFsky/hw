@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 urlpatterns = [
     path('register', csrf_exempt(UserRegisterView.as_view()), name='register'),
     path('confirm_email', csrf_exempt(ConfirmEmailView.as_view()), name='confirm_email'),
-    path('change_email', csrf_exempt(ChangeEmailView.as_view()), name='change_email'),
+    path('change_email', login_required(ChangeEmailView.as_view()), name='change_email'),
     path('sign_in', csrf_exempt(UserLoginView.as_view()), name='login'),
-    path('<user_id>', login_required(csrf_exempt(ProfileView.as_view())), name='profile')
+    path('<user_id>', login_required(ProfileView.as_view()), name='profile')
 ]

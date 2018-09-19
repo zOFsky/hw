@@ -30,17 +30,26 @@ class UserRegisterView(View):
         'username':{
             'required': True,
             'type': 'string',
+            'regex': '^[\w]+$',
+            'minlength': 2,
+            'maxlength': 30,
             'empty': False,
         },
         'first_name':{
             'required': True,
             'type': 'string',
+            'minlength': 2,
+            'maxlength': 30,
+            'regex': '^[a-zA-Z]+$',
             'empty': False,
         },
         
         'last_name':{
             'required': True,
             'type': 'string',
+            'minlength': 2,
+            'maxlength': 30,
+            'regex': '^[a-zA-Z]+$',
             'empty': False,
         }
 
