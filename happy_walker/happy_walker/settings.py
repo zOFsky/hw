@@ -110,11 +110,9 @@ STATIC_URL = '/static/'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-try:
+if "ENV" in os.environ:
     ENV = os.environ['ENV']
     if ENV == 'PROD':
         from happy_walker.dep_settings.prod_settings import *
     elif ENV == 'QA':
         from happy_walker.dep_settings.qa_settings import *
-except:
-    pass
