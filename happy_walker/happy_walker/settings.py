@@ -113,8 +113,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 try:
     ENV = os.environ['ENV']
     if ENV == 'PROD':
-        from .prod_settings import *
+        from happy_walker.dep_settings.prod_settings import *
     elif ENV == 'QA':
-        from .qa_settings import *
+        from happy_walker.dep_settings.qa_settings import *
 except:
     pass
