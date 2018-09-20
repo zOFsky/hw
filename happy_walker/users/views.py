@@ -256,7 +256,6 @@ class UserLoginView(View):
                 "errors":[{"message" : "password incorrect",
                 "code": "login.incorrect_password"}]
                 }, status=467)
-        
 
 
 class ProfileView(LoginRequiredMixin, View):
@@ -276,21 +275,6 @@ class ProfileView(LoginRequiredMixin, View):
             'required': True,
             'type': 'string',
             'empty': False,
-        },
-        'gender': {
-            'required': True,
-            'type': 'string',
-            'empty': True,
-        },
-        'age': {
-            'required': True,
-            'type': 'integer',
-            'empty': True,
-        },
-        'weight': {
-            'required': True,
-            'type': 'integer',
-            'empty': True,
         }
     }
 
@@ -336,10 +320,6 @@ class ProfileView(LoginRequiredMixin, View):
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
             user.save()
-            user.profile.age = data['age']
-            user.profile.weight = data['weight']
-            user.profile.gender = data['gender']
-            user.profile.save()
 
             if data["email"] != user.email:
                 # sending confirmation letter to new email
@@ -364,21 +344,37 @@ class ProfileView(LoginRequiredMixin, View):
             }, status=201)
 
 
-class Image(View):
+class UploadPhotoView(View):
 
     def post(self, request):
-        profile = Profile.objects.get(user_id=request.user.id)
-        profile.image = request.FILES['image']
-        profile.save()
+        if 'image' in request.FILES:
+            if request.FILES['image'].size < 5242880:
 
-        return JsonResponse({
-            "image": profile.image.url
-        }, status=200)
+                profile = Profile.objects.get(user_id=request.user.id)
+                profile.image.delete()
+                profile.image = request.FILES['image']
+                profile.save()
+
+                return JsonResponse({
+                    "image": "{}{}".format(request.get_host(), profile.image.url)
+                }, status=200)
+            else:
+                return JsonResponse({
+                    "message": "File too large. Size should not exceed 5 MB"
+                }, status=400)
+        else:
+            return JsonResponse({
+                "message": "file not uploaded"
+            }, status=400)
 
 
 class UserLogoutView(View):
     def get(self, request):
         logout(request)
+        return JsonResponse({
+            "mesage": "succesfully logged out"
+        }, status=200)
+
 
 
 class ChangePasswordView(View):
@@ -410,7 +406,7 @@ class ChangePasswordView(View):
             return JsonResponse(errors_dict, status = 400)
         data = json.loads(request.body)
         current_user = request.user
-        if data['old_password'] != current_user.password:
+        if not current_user.check_password(data['old_password']):
             return JsonResponse({
                 "message": "password is incorrect",
             },
@@ -418,8 +414,113 @@ class ChangePasswordView(View):
             )
         else:
             if data['new_password'] == data['repeat_password']:
-                current_user.password = data['new_password']
+                current_user.set_password(data['new_password'])
                 current_user.save()
                 return JsonResponse({
                 "message": "password successfully updated"
             }, status=201)
+            else:
+                return JsonResponse({
+                    "message":"passwords doesn't match"
+                }, status=444)
+
+class ForgotPasswordView(View):
+    validation_schema = {
+        'email': {
+            'empty': True,
+            'type': 'string',
+            'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+        },  
+    }
+
+    def post(self, request):
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status = 400)
+        data = json.loads(request.body)
+        try:
+            user = User.objects.get(email=data['email'])
+        except ObjectDoesNotExist:
+            user = False
+        if user:
+            # send email
+            token_generator = TokenGenerator()
+            confirmation_email = EmailSender()
+            context = {
+                'uid': user.id,
+                'token': token_generator.make_token(user),
+            }
+            email = data['email']
+            mail_subject = 'Reset your password'
+            html_email = get_template('reset_password.html')
+            text_email = get_template('reset_password')
+            confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
+            return JsonResponse({
+                'message':'Check your email to change your password'
+            }, status=202)
+        else:
+            return JsonResponse({
+                'message':'Check your email to change your password'
+            }, status=200)
+
+
+class ResetPasswordView(View):
+
+    validation_schema = {
+        'uid': {
+            'required': True,
+            'type': 'integer',
+            'empty': False
+        },
+        'token': {
+            'required': True,
+            'type': 'string',
+            'empty': False
+        },
+        'password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+        'repeat_password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+    }
+
+    def post(self, request):
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status=400)
+        else:
+            data = json.loads(request.body)
+
+        uid = data['uid']
+        token = data['token']
+        if data['password'] == data["repeat_password"]:
+            try:
+                user = User.objects.get(id=uid)
+            except ObjectDoesNotExist:
+                return JsonResponse({
+                    "message": "This user does not exist",
+                }, status=404)
+            token_generator = TokenGenerator()
+            if token_generator.check_token(user, token):
+                user.set_password(data['password'])
+                return JsonResponse({
+                    "id": uid,
+                    "message": "password successfully updated"
+                }, status=201)
+            else:
+                return JsonResponse({
+                    "message": "activation link is invalid"
+                }, status=406)
+        else:
+            return JsonResponse({
+                    "message":"passwords doesn't match"
+                }, status=444)

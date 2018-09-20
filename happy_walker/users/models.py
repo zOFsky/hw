@@ -6,9 +6,6 @@ from django.dispatch import receiver
 
 class Profile(models.Model):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
-    gender = models.CharField(max_length=20, blank=True)
-    age = models.IntegerField(blank=True)
-    weight = models.IntegerField(blank=True)
     image = models.ImageField(upload_to='images/photos')
 
 @receiver(post_save, sender=get_user_model())
