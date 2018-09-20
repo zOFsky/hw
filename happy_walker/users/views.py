@@ -276,21 +276,21 @@ class ProfileView(View):
             'type': 'string',
             'empty': False,
         },
-        'gender': {
-            'required': True,
-            'type': 'string',
-            'empty': True,
-        },
-        'age': {
-            'required': True,
-            'type': 'integer',
-            'empty': True,
-        },
-        'weight': {
-            'required': True,
-            'type': 'integer',
-            'empty': True,
-        }
+        # 'gender': {
+        #     'required': True,
+        #     'type': 'string',
+        #     'empty': True,
+        # },
+        # 'age': {
+        #     'required': True,
+        #     'type': 'integer',
+        #     'empty': True,
+        # },
+        # 'weight': {
+        #     'required': True,
+        #     'type': 'integer',
+        #     'empty': True,
+        # }
     }
 
     def get(self, request, user_id):
