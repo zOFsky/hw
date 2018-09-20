@@ -335,12 +335,12 @@ class ProfileView(View):
 
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
-            profile.age = data['age']
-            profile.weight = data['weight']
-            profile.gender = data['gender']
+            # profile.age = data['age']
+            # profile.weight = data['weight']
+            # profile.gender = data['gender']
 
             user.save()
-            profile.save()
+            # profile.save()
             if data["email"] != user.email:
                 # sending confirmation letter to new email
                 token_generator = TokenGenerator()
