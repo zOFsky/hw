@@ -3,9 +3,10 @@ from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.template.loader import get_template
 from django.views.generic import View
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.mixins import LoginRequiredMixin
 import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
@@ -18,7 +19,7 @@ class UserRegisterView(View):
         'password': {
             'required': True,
             'type': 'string',
-            'minlength': 6,
+            'minlength': 8,
             'empty': False
             },
         'email': {
@@ -256,7 +257,7 @@ class UserLoginView(View):
         
 
 
-class ProfileView(View):
+class ProfileView(LoginRequiredMixin, View):
 
     validation_schema = {
         'email': {
@@ -340,4 +341,51 @@ class ProfileView(View):
                 }, status=202)
             return JsonResponse({
                 "message": "user successfully updated"
+            }, status=201)
+
+class UserLogoutView(View):
+    def get(self, request):
+        logout(request)
+
+class ChangePasswordView(View):
+
+    validation_schema = {
+        'old_password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+        'new_password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+        'repeat_password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+        }
+    def post(self, request):
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status = 400)
+        data = json.loads(request.body)
+        current_user = request.user
+        if data['old_password'] != current_user.password:
+            return JsonResponse({
+                "message": "password is incorrect",
+            },
+            status=401
+            )
+        else:
+            if data['new_password'] == data['repeat_password']:
+                current_user.password = data['new_password']
+                current_user.save()
+                return JsonResponse({
+                "message": "password successfully updated"
             }, status=201)

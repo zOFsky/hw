@@ -21,7 +21,7 @@ class UpdateTest(TestCase):
 
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_email_change_with_correct_email(self):
-        request_data = self.methods.create_json_request(username='username1', password='abc1234',
+        request_data = self.methods.create_json_request(username='username1', password='abc12345',
                                                         email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
@@ -32,7 +32,7 @@ class UpdateTest(TestCase):
                                               content_type="application/json")
         self.assertEqual(resp_confirm_email.status_code, 200)
         login_data = self.methods.create_json_request(username_or_email='username1',
-                             password='abc1234')
+                             password='abc12345')
         resp2 = self.client.post(self.login_url, login_data, 
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
@@ -48,7 +48,7 @@ class UpdateTest(TestCase):
 
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_email_change_with_incorrect_email(self):
-        request_data = self.methods.create_json_request(username='username1', password='abc1234',
+        request_data = self.methods.create_json_request(username='username1', password='abc12345',
                                                         email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
@@ -59,11 +59,12 @@ class UpdateTest(TestCase):
                                               content_type="application/json")
         self.assertEqual(resp_confirm_email.status_code, 200)
         login_data = self.methods.create_json_request(username_or_email='username1',
-                             password='abc1234')
+                             password='abc12345')
         resp2 = self.client.post(self.login_url, login_data, 
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
-        update_data = self.methods.create_json_request(first_name="Andriy", email="asd@fun.com", last_name="Doe")
+        update_data = self.methods.create_json_request(first_name="Andriy", email="asd@fun.com", 
+                   last_name="Doe")
         resp3 = self.client.post(self.update_url,update_data,
                                  content_type="application/json")
         self.assertEqual(resp3.status_code, 202)

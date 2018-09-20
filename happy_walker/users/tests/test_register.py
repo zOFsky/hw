@@ -28,22 +28,22 @@ class RegisterTest(TestCase):
     methods = MethodsForTest()
     
     def test_registration_api_with_correct_data_input(self):
-        request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mail.com', last_name="Smith", first_name="John")
+        request_data = self.methods.create_json_request(username='username1', password='abc12345',
+                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
     
     def test_registration_with_password_too_short(self):
         request_data = self.methods.create_json_request(username='username1', password='abc4',
-                                                        email='asd@mail.com', last_name="Smith", first_name="John")
+                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
 
     def test_registration_with_username_too_short(self):
         request_data = self.methods.create_json_request(username='1', password='abc4defg',
-                                                        email='asd@mail.com', last_name="Smith", first_name="John")
+                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
@@ -51,14 +51,14 @@ class RegisterTest(TestCase):
     
     def test_registration_with_username_wrong_char(self):
         request_data = self.methods.create_json_request(username='1der@pes', password='abc4defg',
-                                                        email='asd@mail.com', last_name="Smith", first_name="John")
+                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
     
     def test_registration_with_incorrect_email(self):
-        request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mailcom', last_name="Smith", first_name="John")
+        request_data = self.methods.create_json_request(username='username1', password='abc12345',
+                                        email='asd@mailcom', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
@@ -66,21 +66,21 @@ class RegisterTest(TestCase):
     
     def test_registration_with_incorrect_email_and_password(self):
         request_data = self.methods.create_json_request(username='username1', password='ab234',
-                                                        email='asdmail.com', last_name="Smith", first_name="John")
+                                     email='asdmail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
 
     def test_registration_with_empty_email_and_password(self):
         request_data = self.methods.create_json_request(username='username1', password='',
-                                                        email='', last_name="Smith", first_name="John")
+                                                 email='', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
 
     def test_registration_wih_no_password(self):
         request_data = self.methods.create_json_request(username='username1',
-                                                        email='asd@mail.com', last_name="Smith", first_name="John")
+                                    email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 400)
@@ -92,36 +92,36 @@ class RegisterTest(TestCase):
         self.assertEqual(resp.status_code, 400)
 
     def test_registration_username_exists(self):
-        request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mail.com', last_name="Smith", first_name="John")
+        request_data = self.methods.create_json_request(username='username1', password='abc12345',
+                                        email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
 
-        request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mail.com', last_name="Smith", first_name="John")
+        request_data = self.methods.create_json_request(username='username1', password='abc12345',
+                                    email='asd@mail.com', last_name="Smith", first_name="John")
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 460)
 
 
     def test_registration_with_correct_data_then_existing_username_and_email_correct_data(self):
-        request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mail.com', first_name='Smith', last_name='John')
+        request_data = self.methods.create_json_request(username='username1', password='abc12345',
+                                        email='asd@mail.com', first_name='Smith', last_name='John')
         resp1 = self.client.post(self.registration_url, request_data,
              content_type="application/json")
 
-        request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asacsd@mail.com', first_name='Smith', last_name='John')
+        request_data = self.methods.create_json_request(username='username1', password='abc12345',
+                                    email='asacsd@mail.com', first_name='Smith', last_name='John')
         resp2 = self.client.post(self.registration_url, request_data,
              content_type="application/json")
 
-        request_data = self.methods.create_json_request(username='username2', password='abc1234',
-                                                        email='asd@mail.com', first_name='Smith', last_name='John')
+        request_data = self.methods.create_json_request(username='username2', password='abc12345',
+                                        email='asd@mail.com', first_name='Smith', last_name='John')
         resp3 = self.client.post(self.registration_url, request_data,
              content_type="application/json")
 
-        request_data = self.methods.create_json_request(username='username2', password='abc1234',
-                                                        email='asascd@mail.com', first_name='Smith', last_name='John')
+        request_data = self.methods.create_json_request(username='username2', password='abc12345',
+                                        email='asascd@mail.com', first_name='Smith', last_name='John')
         resp4 = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp1.status_code, 201)

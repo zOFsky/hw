@@ -19,8 +19,8 @@ class UpdateTest(TestCase):
 
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_confirm_email_api_with_correct_data_input(self):
-        request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mail.com', first_name='Smith', last_name='John')
+        request_data = self.methods.create_json_request(username='username1', password='abc12345',
+                                        email='asd@mail.com', first_name='Smith', last_name='John')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
@@ -32,8 +32,8 @@ class UpdateTest(TestCase):
 
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_confirm_email_api_with_invalid_token(self):
-        request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mail.com', first_name='Smith', last_name='John')
+        request_data = self.methods.create_json_request(username='username1', password='abc12345',
+                                        email='asd@mail.com', first_name='Smith', last_name='John')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
@@ -45,8 +45,8 @@ class UpdateTest(TestCase):
 
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
     def test_confirm_email_api_with_invalid_user_id(self):
-        request_data = self.methods.create_json_request(username='username1', password='abc1234',
-                                                        email='asd@mail.com', first_name='Smith', last_name='John')
+        request_data = self.methods.create_json_request(username='username1', password='abc12345',
+                                    email='asd@mail.com', first_name='Smith', last_name='John')
         resp = self.client.post(self.registration_url, request_data,
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
