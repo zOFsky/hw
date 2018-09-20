@@ -332,16 +332,15 @@ class ProfileView(LoginRequiredMixin, View):
         else:
             data = json.loads(request.body)
             user = User.objects.get(id=request.user.id)
-            profile = Profile.objects.get(user_id=request.user.id)
 
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
-            profile.age = data['age']
-            profile.weight = data['weight']
-            profile.gender = data['gender']
-
             user.save()
-            profile.save()
+            user.profile.age = data['age']
+            user.profile.weight = data['weight']
+            user.profile.gender = data['gender']
+            user.profile.save()
+
             if data["email"] != user.email:
                 # sending confirmation letter to new email
                 token_generator = TokenGenerator()
@@ -371,7 +370,6 @@ class Image(View):
         profile = Profile.objects.get(user_id=request.user.id)
         profile.image = request.FILES['image']
         profile.save()
-        profile = Profile.objects.get(user_id=request.user.id)
 
         return JsonResponse({
             "image": profile.image.url
