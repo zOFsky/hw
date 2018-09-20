@@ -1,11 +1,13 @@
 from django.contrib.auth.models import User
+from users.models import Profile
 from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.template.loader import get_template
 from django.views.generic import View
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.mixins import LoginRequiredMixin
 import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
@@ -18,7 +20,7 @@ class UserRegisterView(View):
         'password': {
             'required': True,
             'type': 'string',
-            'minlength': 6,
+            'minlength': 8,
             'empty': False
             },
         'email': {
@@ -105,7 +107,7 @@ class ConfirmEmailView(View):
     validation_schema = {
         'uid': {
             'required': True,
-            'type': 'string',
+            'type': 'integer',
             'empty': False
         },
         'token': {
@@ -150,6 +152,7 @@ class ChangeEmailView(View):
     validation_schema = {
         'uid': {
             'required': True,
+            'type': 'integer',
             'empty': False
         },
         'token': {
@@ -256,26 +259,39 @@ class UserLoginView(View):
         
 
 
-class ProfileView(View):
+class ProfileView(LoginRequiredMixin, View):
 
     validation_schema = {
         'email': {
-            'empty': True,
+            'required': True,
             'type': 'string',
             'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
         },
-        'first_name':{
+        'first_name': {
             'required': True,
             'type': 'string',
             'empty': False,
         },
-        
-        'last_name':{
+        'last_name': {
             'required': True,
             'type': 'string',
             'empty': False,
+        },
+        'gender': {
+            'required': True,
+            'type': 'string',
+            'empty': True,
+        },
+        'age': {
+            'required': True,
+            'type': 'integer',
+            'empty': True,
+        },
+        'weight': {
+            'required': True,
+            'type': 'integer',
+            'empty': True,
         }
-            
     }
 
     def get(self, request, user_id):
@@ -315,11 +331,17 @@ class ProfileView(View):
             return JsonResponse(errors_dict, status=400)
         else:
             data = json.loads(request.body)
-            user = User.objects.filter(id=request.user.id).get()
+            user = User.objects.get(id=request.user.id)
+            profile = Profile.objects.get(user_id=request.user.id)
+
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
-            
+            profile.age = data['age']
+            profile.weight = data['weight']
+            profile.gender = data['gender']
+
             user.save()
+            profile.save()
             if data["email"] != user.email:
                 # sending confirmation letter to new email
                 token_generator = TokenGenerator()
@@ -340,4 +362,66 @@ class ProfileView(View):
                 }, status=202)
             return JsonResponse({
                 "message": "user successfully updated"
+            }, status=201)
+
+
+class Image(View):
+
+    def post(self, request):
+        profile = Profile.objects.get(user_id=request.user.id)
+        profile.image = request.FILES['image']
+        profile.save()
+        profile = Profile.objects.get(user_id=request.user.id)
+
+        return JsonResponse({
+            "image": profile.image.url
+        }, status=200)
+
+
+class UserLogoutView(View):
+    def get(self, request):
+        logout(request)
+
+
+class ChangePasswordView(View):
+
+    validation_schema = {
+        'old_password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+        'new_password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+        'repeat_password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+        }
+    def post(self, request):
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status = 400)
+        data = json.loads(request.body)
+        current_user = request.user
+        if data['old_password'] != current_user.password:
+            return JsonResponse({
+                "message": "password is incorrect",
+            },
+            status=401
+            )
+        else:
+            if data['new_password'] == data['repeat_password']:
+                current_user.password = data['new_password']
+                current_user.save()
+                return JsonResponse({
+                "message": "password successfully updated"
             }, status=201)
