@@ -376,7 +376,7 @@ class ChangePasswordView(View):
             return JsonResponse(errors_dict, status = 400)
         data = json.loads(request.body)
         current_user = request.user
-        if data['old_password'] != current_user.password:
+        if not current_user.check_password(data['old_password']):
             return JsonResponse({
                 "message": "password is incorrect",
             },
@@ -384,7 +384,7 @@ class ChangePasswordView(View):
             )
         else:
             if data['new_password'] == data['repeat_password']:
-                current_user.password = data['new_password']
+                current_user.set_password(data['new_password'
                 current_user.save()
                 return JsonResponse({
                 "message": "password successfully updated"
