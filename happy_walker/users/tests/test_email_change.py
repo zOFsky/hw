@@ -72,4 +72,4 @@ class UpdateTest(TestCase):
                                   uid=resp['uid'], new_email="new@mailcom")
         resp_email_changer = self.client.post(self.change_email_url, change_mail_data,
                                  content_type="application/json")
-        self.assertEqual(resp_email_changer.status_code, 401) 
+        self.assertEqual(resp_email_changer.status_code, 400)
