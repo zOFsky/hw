@@ -363,21 +363,6 @@ class ProfileView(LoginRequiredMixin, View):
             }, status=201)
 
 
-<<<<<<< HEAD
-=======
-class Image(View):
-
-    def post(self, request):
-        profile = Profile.objects.get(user_id=request.user.id)
-        profile.image = request.FILES['image']
-        profile.save()
-
-        return JsonResponse({
-            "image": profile.image.url
-        }, status=200)
-
-
->>>>>>> dfc52230db75e8160947b39eca3c38201d8ea4c8
 class UserLogoutView(View):
     def get(self, request):
         logout(request)
