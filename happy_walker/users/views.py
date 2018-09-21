@@ -512,6 +512,7 @@ class ResetPasswordView(View):
             token_generator = TokenGenerator()
             if token_generator.check_token(user, token):
                 user.set_password(data['password'])
+                user.save()
                 return JsonResponse({
                     "id": uid,
                     "message": "password successfully updated"
