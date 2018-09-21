@@ -4,7 +4,6 @@ import json
 import mock
 from .methods_for_test import MethodsForTest
 
-
 class PasswordChangeTest(TestCase):
 
     def setUpTestData(self):

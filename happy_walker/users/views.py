@@ -424,6 +424,7 @@ class ChangePasswordView(View):
                     "message":"passwords doesn't match"
                 }, status=444)
 
+
 class ForgotPasswordView(View):
     validation_schema = {
         'email': {
