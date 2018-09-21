@@ -1,6 +1,5 @@
 from django.urls import path
-from .views import (UserRegisterView, UserLoginView, ConfirmEmailView, ForgotPasswordView,
-                   ChangeEmailView, ProfileView, ChangePasswordView, ResetPasswordView, UploadPhotoView)
+from .views import *
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 
