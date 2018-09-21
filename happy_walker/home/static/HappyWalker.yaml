@@ -18,7 +18,6 @@ paths:
       - "user"
       summary: "Add a new User to the store"
       description: ""
-      operationId: "addUser"
       parameters:
       - in: "body"
         name: "body"
@@ -50,7 +49,6 @@ paths:
       - "user"
       summary: "User email verification"
       description: ""
-      operationId: "email verification"
       parameters:
       - in: "body"
         name: "body"
@@ -60,12 +58,9 @@ paths:
           $ref: "#/definitions/Email"
       responses:
         400:
-          description: "activation link is invalid"
+          description: "bad request"
           schema:
-            type: "object"
-            properties:
-              message:
-                type: "string"
+            $ref: "#/definitions/ValidationErrors"
         200:
           description: "user successfully activated"
           schema:
@@ -81,7 +76,6 @@ paths:
       - "user"
       summary: "User login"
       description: ""
-      operationId: "sign_in"
       parameters:
       - in: "body"
         name: "body"
@@ -119,14 +113,27 @@ paths:
               message:
                 type: "string"
               token:
-                type: "integer"
+                type: "string"
+  /users/logout:
+    get:
+      tags:
+      - "user"
+      summary: "User logout"
+      description: ""
+      responses:
+        200:
+          description: "succesfully logged out"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
   /users/{user_id}:
     get:
       tags:
       - "user"
       summary: "Get user profile"
       description: ""
-      operationID: "get user profile"
       parameters:
       - in: "path"
         name: "user_id"
@@ -151,7 +158,7 @@ paths:
                   - last_name
                   - first_name
         400:
-          description: "error"
+          description: "This user does not exist"
           schema:
             type: "object"
             properties:
@@ -163,7 +170,6 @@ paths:
       - "user"
       summary: "Update user profile"
       description: ""
-      operationID: "update user profile"
       parameters:
       - in: "body"
         name: "body"
@@ -197,13 +203,49 @@ paths:
           description: "error"
           schema:
             $ref: "#/definitions/ValidationErrors"
+        401:
+          description: "user_id is not 'me', access denied"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+  /users/upload_photo:
+    post:
+      tags:
+      - "user"
+      summary: "upload photo"
+      description: ""
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: fromData
+          name: image
+          type: file
+          description: The file to upload
+      responses:
+        200:
+          description: "success"
+          schema:
+            type: "object"
+            properties:
+              image:
+                type: "string"
+        400:
+          description: "File too large or input empty"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+              code:
+                type: "string"
   /users/change_email:
     post:
       tags:
       - "user"
       summary: "Change email"
       description: ""
-      operationID: "change email"
       parameters:
       - in: "body"
         name: "body"
@@ -213,17 +255,17 @@ paths:
           type: "object"
           properties:
             uid:
-              type: "string"
+              type: "integer"
             token:
               type: "string"
             new_email:
               type: "string"
       responses:
-        401:
+        400:
           description: "bad request"
           schema:
             $ref: "#/definitions/ValidationErrors"
-        400:
+        401:
           description: "This user does not exist"
           schema:
             type: "object"
@@ -238,11 +280,151 @@ paths:
               message:
                 type: "string"
               uid:
-                type: "string"
+                type: "integer"
               new_email:
                 type: "string"
         406:
           description: "activation link is invalid"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+  /users/change_password:
+    post:
+      tags:
+      - "user"
+      summary: "Change password"
+      description: ""
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Change password"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            old_password:
+              type: "string"
+            new_password:
+              minLength: 8
+              type: "string"
+            repeat_password:
+              type: "string"
+      responses:
+        201:
+          description: "password successfully updated"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+        401:
+          description: "password is incorrect"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+        444:
+          description: "passwords doesn't match"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+        400:
+          description: "input errors"
+          schema:
+            $ref: "#/definitions/ValidationErrors"
+  /users/forgot_password:
+    post:
+      tags:
+      - "user"
+      summary: "Forgot password"
+      description: "Forgot password"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Forgot password"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            email:
+              type: "string"
+      responses:
+        202:
+          description: "Success"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+        200:
+          description: "User does not exist"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+        400:
+          description: "input errors"
+          schema:
+            $ref: "#/definitions/ValidationErrors"
+  /users/reset_password:
+    post:
+      tags:
+      - "user"
+      summary: "Reset password"
+      description: "Reset password"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Reset password"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            uid:
+              type: "integer"
+            token:
+              type: "string"
+            password:
+              type: "string"
+              minLength: 8
+            repeat_password:
+              type: "string"
+      responses:
+        201:
+          description: "password successfully updated"
+          schema:
+            type: "object"
+            properties:
+              uid:
+                type: "integer"
+              message:
+                type: "string"
+        400:
+          description: "input errors"
+          schema:
+            $ref: "#/definitions/ValidationErrors"
+        404:
+          description: "This user does not exist"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+        444:
+          description: "Passwords doesn't match"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+        406:
+          description: "Activation link is invalid"
           schema:
             type: "object"
             properties:
@@ -261,15 +443,13 @@ definitions:
       email:
         type: "string"
       password:
-        minLength: 6
+        minLength: 8
         type: "string"
-    xml:
-      name: "User"
   Email:
     type: "object"
     properties:
       uid:
-        type: "string"
+        type: "integer"
       token:
         type: "string"
   Errors:
