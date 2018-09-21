@@ -60,12 +60,9 @@ paths:
           $ref: "#/definitions/Email"
       responses:
         400:
-          description: "activation link is invalid"
+          description: "bad request"
           schema:
-            type: "object"
-            properties:
-              message:
-                type: "string"
+            $ref: "#/definitions/ValidationErrors"
         200:
           description: "user successfully activated"
           schema:
@@ -261,15 +258,13 @@ definitions:
       email:
         type: "string"
       password:
-        minLength: 6
+        minLength: 8
         type: "string"
-    xml:
-      name: "User"
   Email:
     type: "object"
     properties:
       uid:
-        type: "string"
+        type: "int"
       token:
         type: "string"
   Errors:

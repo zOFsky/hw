@@ -131,7 +131,11 @@ class ConfirmEmailView(View):
             user = User.objects.get(id=uid)
         except ObjectDoesNotExist:
             return JsonResponse({
-                "message": "This user does not exist",
+                "errors": [{
+                    "message": "This user does not exist",
+                    "code": "ObjectDoesNotExist",
+                    "field": "uid"
+                }]
             }, status=400)
         token_generator = TokenGenerator()
         if token_generator.check_token(user, token):
@@ -143,7 +147,11 @@ class ConfirmEmailView(View):
             }, status=200)
         else:
             return JsonResponse({
-                "message": "activation link is invalid"
+                "errors": [{
+                    "message": "Activation link is invalid",
+                    "code": "token.invalid",
+                    "field": "token"
+                }]
             }, status=400)
 
 
@@ -172,7 +180,7 @@ class ChangeEmailView(View):
         validator = CustomValidator(self.validation_schema)
         if validator.request_validation(request):
             errors_dict = validator.request_validation(request)
-            return JsonResponse(errors_dict, status=401)
+            return JsonResponse(errors_dict, status=400)
         else:
             data = json.loads(request.body)
 
@@ -184,7 +192,7 @@ class ChangeEmailView(View):
         except ObjectDoesNotExist:
             return JsonResponse({
                 "message": "This user does not exist",
-            }, status=400)
+            }, status=401)
         token_generator = TokenGenerator()
         if token_generator.check_token(user, token):
             User.objects.filter(id=uid).update(email=new_email)
@@ -360,11 +368,13 @@ class UploadPhotoView(View):
                 }, status=200)
             else:
                 return JsonResponse({
-                    "message": "File too large. Size should not exceed 5 MB"
+                    "message": "File too large. Size should not exceed 5 MB",
+                    "code": "size"
                 }, status=400)
         else:
             return JsonResponse({
-                "message": "file not uploaded"
+                "message": "file not uploaded",
+                "code": "empty"
             }, status=400)
 
 
@@ -372,7 +382,7 @@ class UserLogoutView(View):
     def get(self, request):
         logout(request)
         return JsonResponse({
-            "mesage": "succesfully logged out"
+            "message": "succesfully logged out"
         }, status=200)
 
 
