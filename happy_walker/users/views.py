@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from users.models import Profile
 from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.template.loader import get_template
@@ -106,7 +107,7 @@ class ConfirmEmailView(View):
     validation_schema = {
         'uid': {
             'required': True,
-            'type': 'string',
+            'type': 'integer',
             'empty': False
         },
         'token': {
@@ -151,6 +152,7 @@ class ChangeEmailView(View):
     validation_schema = {
         'uid': {
             'required': True,
+            'type': 'integer',
             'empty': False
         },
         'token': {
@@ -260,22 +262,35 @@ class ProfileView(LoginRequiredMixin, View):
 
     validation_schema = {
         'email': {
-            'empty': True,
+            'required': True,
             'type': 'string',
             'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
         },
-        'first_name':{
+        'first_name': {
             'required': True,
             'type': 'string',
             'empty': False,
         },
-        
-        'last_name':{
+        'last_name': {
             'required': True,
             'type': 'string',
             'empty': False,
+        },
+        'gender': {
+            'required': True,
+            'type': 'string',
+            'empty': True,
+        },
+        'age': {
+            'required': True,
+            'type': 'integer',
+            'empty': True,
+        },
+        'weight': {
+            'required': True,
+            'type': 'integer',
+            'empty': True,
         }
-            
     }
 
     def get(self, request, user_id):
@@ -315,11 +330,16 @@ class ProfileView(LoginRequiredMixin, View):
             return JsonResponse(errors_dict, status=400)
         else:
             data = json.loads(request.body)
-            user = User.objects.filter(id=request.user.id).get()
+            user = User.objects.get(id=request.user.id)
+
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
-            
             user.save()
+            user.profile.age = data['age']
+            user.profile.weight = data['weight']
+            user.profile.gender = data['gender']
+            user.profile.save()
+
             if data["email"] != user.email:
                 # sending confirmation letter to new email
                 token_generator = TokenGenerator()
@@ -343,12 +363,28 @@ class ProfileView(LoginRequiredMixin, View):
             }, status=201)
 
 
+<<<<<<< HEAD
+=======
+class Image(View):
+
+    def post(self, request):
+        profile = Profile.objects.get(user_id=request.user.id)
+        profile.image = request.FILES['image']
+        profile.save()
+
+        return JsonResponse({
+            "image": profile.image.url
+        }, status=200)
+
+
+>>>>>>> dfc52230db75e8160947b39eca3c38201d8ea4c8
 class UserLogoutView(View):
     def get(self, request):
         logout(request)
         return JsonResponse({
             "mesage":"succesfully logged out"
         }, status=200)
+
 
 
 class ChangePasswordView(View):

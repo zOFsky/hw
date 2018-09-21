@@ -102,15 +102,14 @@ USE_TZ = True
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = '/static/'
-
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-try:
+if "ENV" in os.environ:
     ENV = os.environ['ENV']
     if ENV == 'PROD':
-        from .prod_settings import *
+        from happy_walker.dep_settings.prod_settings import *
     elif ENV == 'QA':
-        from .qa_settings import *
-except:
-    pass
+        from happy_walker.dep_settings.qa_settings import *

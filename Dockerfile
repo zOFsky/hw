@@ -2,7 +2,11 @@ FROM alpine
 RUN apk add python3-dev \
             gcc \
 		    libc-dev \
-		    linux-headers
+		    linux-headers \
+                    zlib \
+                    zlib-dev \
+                    jpeg \
+                    jpeg-dev
 RUN pip3 install --upgrade pip
 RUN mkdir /data
 WORKDIR /data

@@ -27,7 +27,7 @@ class UpdateTest(TestCase):
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
         resp = json.loads(resp.content)
-        email = self.methods.create_json_request(uid=str(resp['uid']), token='true')
+        email = self.methods.create_json_request(uid=resp['uid'], token='true')
         resp_confirm_email = self.client.post(self.confirm_email_url, email,
                                               content_type="application/json")
         self.assertEqual(resp_confirm_email.status_code, 200)
@@ -36,12 +36,13 @@ class UpdateTest(TestCase):
         resp2 = self.client.post(self.login_url, login_data, 
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
-        update_data = self.methods.create_json_request(first_name="Jane", email="asd@fun.com", last_name="Doe")
+        update_data = self.methods.create_json_request(first_name="Jane", email="asd@fun.com", last_name="Doe", age=18,
+                                                       gender="male", weight=80)
         resp3 = self.client.post(self.update_url,update_data,
                                  content_type="application/json")
         self.assertEqual(resp3.status_code, 202)
         change_mail_data = self.methods.create_json_request(token='true',
-                                  uid=str(resp['uid']), new_email="new@mail.com")
+                                  uid=resp['uid'], new_email="new@mail.com")
         resp_email_changer = self.client.post(self.change_email_url, change_mail_data,
                                  content_type="application/json")
         self.assertEqual(resp_email_changer.status_code, 201)
@@ -54,7 +55,7 @@ class UpdateTest(TestCase):
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
         resp = json.loads(resp.content)
-        email = self.methods.create_json_request(uid=str(resp['uid']), token='true')
+        email = self.methods.create_json_request(uid=resp['uid'], token='true')
         resp_confirm_email = self.client.post(self.confirm_email_url, email,
                                               content_type="application/json")
         self.assertEqual(resp_confirm_email.status_code, 200)
@@ -64,12 +65,12 @@ class UpdateTest(TestCase):
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
         update_data = self.methods.create_json_request(first_name="Andriy", email="asd@fun.com", 
-                   last_name="Doe")
+                   last_name="Doe", age=18, gender="male", weight=80)
         resp3 = self.client.post(self.update_url,update_data,
                                  content_type="application/json")
         self.assertEqual(resp3.status_code, 202)
         change_mail_data = self.methods.create_json_request(token='true',
-                                  uid=str(resp['uid']), new_email="new@mailcom")
+                                  uid=resp['uid'], new_email="new@mailcom")
         resp_email_changer = self.client.post(self.change_email_url, change_mail_data,
                                  content_type="application/json")
         self.assertEqual(resp_email_changer.status_code, 401) 
