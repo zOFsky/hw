@@ -438,7 +438,8 @@ class ChangePasswordView(View):
 class ForgotPasswordView(View):
     validation_schema = {
         'email': {
-            'empty': True,
+            'required': True,
+            'empty': False,
             'type': 'string',
             'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
         },  
