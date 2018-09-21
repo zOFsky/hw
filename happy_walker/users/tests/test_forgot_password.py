@@ -25,7 +25,7 @@ class LoginTest(TestCase):
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
         resp = json.loads(resp.content)
-        email = self.methods.create_json_request(uid=str(resp['uid']), token='true')
+        email = self.methods.create_json_request(uid=resp['uid'], token='true')
         resp2 = self.client.post(self.confirm_email_url, email,
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 200)

@@ -25,11 +25,11 @@ class LoginTest(TestCase):
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
         resp_content = json.loads(resp.content)
-        email = self.methods.create_json_request(uid=str(resp_content['uid']), token='true')
+        email = self.methods.create_json_request(uid=resp_content['uid'], token='true')
         resp2 = self.client.post(self.confirm_email_url, email,
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 200)
-        reset_data = self.methods.create_json_request(uid=str(resp_content['uid']), token='true',
+        reset_data = self.methods.create_json_request(uid=resp_content['uid'], token='true',
                              password='new_password', repeat_password='new_password')
         resp3 = self.client.post(self.reset_url, reset_data,
                                  content_type="application/json")
@@ -43,11 +43,11 @@ class LoginTest(TestCase):
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
         resp_content = json.loads(resp.content)
-        email = self.methods.create_json_request(uid=str(resp_content['uid']), token='true')
+        email = self.methods.create_json_request(uid=resp_content['uid'], token='true')
         resp2 = self.client.post(self.confirm_email_url, email,
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 200)
-        reset_data = self.methods.create_json_request(uid=str(resp_content['uid']), token='true',
+        reset_data = self.methods.create_json_request(uid=resp_content['uid'], token='true',
                             repeat_password='new_password')
         resp3 = self.client.post(self.reset_url, reset_data,
                                  content_type="application/json")
@@ -61,11 +61,11 @@ class LoginTest(TestCase):
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
         resp_content = json.loads(resp.content)
-        email = self.methods.create_json_request(uid=str(resp_content['uid']), token='true')
+        email = self.methods.create_json_request(uid=resp_content['uid'], token='true')
         resp2 = self.client.post(self.confirm_email_url, email,
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 200)
-        reset_data = self.methods.create_json_request(uid=str(resp_content['uid']), token='true',
+        reset_data = self.methods.create_json_request(uid=resp_content['uid'], token='true',
                              password='new_password', repeat_password='missmatched')
         resp3 = self.client.post(self.reset_url, reset_data,
                                  content_type="application/json")
@@ -80,11 +80,11 @@ class LoginTest(TestCase):
              content_type="application/json")
         self.assertEqual(resp.status_code, 201)
         resp_content = json.loads(resp.content)
-        email = self.methods.create_json_request(uid=str(resp_content['uid']), token='true')
+        email = self.methods.create_json_request(uid=resp_content['uid'], token='true')
         resp2 = self.client.post(self.confirm_email_url, email,
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 200)
-        reset_data = self.methods.create_json_request(uid='5555', token='true',
+        reset_data = self.methods.create_json_request(uid=5555, token='true',
                              password='new_password', repeat_password='new_password')
         resp3 = self.client.post(self.reset_url, reset_data,
                                  content_type="application/json")

@@ -275,21 +275,6 @@ class ProfileView(LoginRequiredMixin, View):
             'required': True,
             'type': 'string',
             'empty': False,
-        },
-        'gender': {
-            'required': True,
-            'type': 'string',
-            'empty': True,
-        },
-        'age': {
-            'required': True,
-            'type': 'integer',
-            'empty': True,
-        },
-        'weight': {
-            'required': True,
-            'type': 'integer',
-            'empty': True,
         }
     }
 
@@ -335,10 +320,6 @@ class ProfileView(LoginRequiredMixin, View):
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
             user.save()
-            user.profile.age = data['age']
-            user.profile.weight = data['weight']
-            user.profile.gender = data['gender']
-            user.profile.save()
 
             if data["email"] != user.email:
                 # sending confirmation letter to new email
@@ -363,11 +344,35 @@ class ProfileView(LoginRequiredMixin, View):
             }, status=201)
 
 
+class UploadPhotoView(View):
+
+    def post(self, request):
+        if 'image' in request.FILES:
+            if request.FILES['image'].size < 5242880:
+
+                profile = Profile.objects.get(user_id=request.user.id)
+                profile.image.delete()
+                profile.image = request.FILES['image']
+                profile.save()
+
+                return JsonResponse({
+                    "image": "{}{}".format(request.get_host(), profile.image.url)
+                }, status=200)
+            else:
+                return JsonResponse({
+                    "message": "File too large. Size should not exceed 5 MB"
+                }, status=400)
+        else:
+            return JsonResponse({
+                "message": "file not uploaded"
+            }, status=400)
+
+
 class UserLogoutView(View):
     def get(self, request):
         logout(request)
         return JsonResponse({
-            "mesage":"succesfully logged out"
+            "mesage": "succesfully logged out"
         }, status=200)
 
 
@@ -419,6 +424,7 @@ class ChangePasswordView(View):
                     "message":"passwords doesn't match"
                 }, status=444)
 
+
 class ForgotPasswordView(View):
     validation_schema = {
         'email': {
@@ -465,6 +471,7 @@ class ResetPasswordView(View):
     validation_schema = {
         'uid': {
             'required': True,
+            'type': 'integer',
             'empty': False
         },
         'token': {
@@ -518,4 +525,3 @@ class ResetPasswordView(View):
             return JsonResponse({
                     "message":"passwords doesn't match"
                 }, status=444)
-
