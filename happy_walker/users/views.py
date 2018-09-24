@@ -300,7 +300,8 @@ class ProfileView(LoginRequiredMixin, View):
         profile = {
             'username': user.username,
             'first_name': user.first_name,
-            'last_name': user.last_name
+            'last_name': user.last_name,
+            'image': "{}{}".format(request.get_host(), user.profile.image.url)
         }
 
         if user_id == str(request.user.id) or user_id == 'me':
@@ -359,7 +360,8 @@ class UploadPhotoView(View):
             if request.FILES['image'].size < 5242880:
 
                 profile = Profile.objects.get(user_id=request.user.id)
-                profile.image.delete()
+                if profile.image.url != "/media/images/avatar.png":
+                    profile.image.delete()
                 profile.image = request.FILES['image']
                 profile.save()
 
