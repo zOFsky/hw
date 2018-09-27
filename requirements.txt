@@ -5,3 +5,7 @@ mock==2.0.0
 uwsgi==2.0.17
 django-cors-headers==2.4.0
 Pillow
+google-api-python-client
+google-auth 
+google-auth-oauthlib 
+google-auth-httplib2
