@@ -1,11 +1,13 @@
 from django.contrib.auth.models import User
+from users.models import Profile
 from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.template.loader import get_template
 from django.views.generic import View
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.mixins import LoginRequiredMixin
 import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
@@ -18,7 +20,7 @@ class UserRegisterView(View):
         'password': {
             'required': True,
             'type': 'string',
-            'minlength': 6,
+            'minlength': 8,
             'empty': False
             },
         'email': {
@@ -105,7 +107,7 @@ class ConfirmEmailView(View):
     validation_schema = {
         'uid': {
             'required': True,
-            'type': 'string',
+            'type': 'integer',
             'empty': False
         },
         'token': {
@@ -129,7 +131,11 @@ class ConfirmEmailView(View):
             user = User.objects.get(id=uid)
         except ObjectDoesNotExist:
             return JsonResponse({
-                "message": "This user does not exist",
+                "errors": [{
+                    "message": "This user does not exist",
+                    "code": "ObjectDoesNotExist",
+                    "field": "uid"
+                }]
             }, status=400)
         token_generator = TokenGenerator()
         if token_generator.check_token(user, token):
@@ -141,7 +147,11 @@ class ConfirmEmailView(View):
             }, status=200)
         else:
             return JsonResponse({
-                "message": "activation link is invalid"
+                "errors": [{
+                    "message": "Activation link is invalid",
+                    "code": "token.invalid",
+                    "field": "token"
+                }]
             }, status=400)
 
 
@@ -150,6 +160,7 @@ class ChangeEmailView(View):
     validation_schema = {
         'uid': {
             'required': True,
+            'type': 'integer',
             'empty': False
         },
         'token': {
@@ -169,7 +180,7 @@ class ChangeEmailView(View):
         validator = CustomValidator(self.validation_schema)
         if validator.request_validation(request):
             errors_dict = validator.request_validation(request)
-            return JsonResponse(errors_dict, status=401)
+            return JsonResponse(errors_dict, status=400)
         else:
             data = json.loads(request.body)
 
@@ -181,7 +192,7 @@ class ChangeEmailView(View):
         except ObjectDoesNotExist:
             return JsonResponse({
                 "message": "This user does not exist",
-            }, status=400)
+            }, status=401)
         token_generator = TokenGenerator()
         if token_generator.check_token(user, token):
             User.objects.filter(id=uid).update(email=new_email)
@@ -253,29 +264,26 @@ class UserLoginView(View):
                 "errors":[{"message" : "password incorrect",
                 "code": "login.incorrect_password"}]
                 }, status=467)
-        
 
 
-class ProfileView(View):
+class ProfileView(LoginRequiredMixin, View):
 
     validation_schema = {
         'email': {
-            'empty': True,
+            'required': True,
             'type': 'string',
             'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
         },
-        'first_name':{
+        'first_name': {
             'required': True,
             'type': 'string',
             'empty': False,
         },
-        
-        'last_name':{
+        'last_name': {
             'required': True,
             'type': 'string',
             'empty': False,
         }
-            
     }
 
     def get(self, request, user_id):
@@ -292,7 +300,8 @@ class ProfileView(View):
         profile = {
             'username': user.username,
             'first_name': user.first_name,
-            'last_name': user.last_name
+            'last_name': user.last_name,
+            'image': "{}{}".format(request.get_host(), user.profile.image.url)
         }
 
         if user_id == str(request.user.id) or user_id == 'me':
@@ -315,11 +324,12 @@ class ProfileView(View):
             return JsonResponse(errors_dict, status=400)
         else:
             data = json.loads(request.body)
-            user = User.objects.filter(id=request.user.id).get()
+            user = User.objects.get(id=request.user.id)
+
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
-            
             user.save()
+
             if data["email"] != user.email:
                 # sending confirmation letter to new email
                 token_generator = TokenGenerator()
@@ -341,3 +351,191 @@ class ProfileView(View):
             return JsonResponse({
                 "message": "user successfully updated"
             }, status=201)
+
+
+class UploadPhotoView(View):
+
+    def post(self, request):
+        if 'image' in request.FILES:
+            if request.FILES['image'].size < 5242880:
+
+                profile = Profile.objects.get(user_id=request.user.id)
+                if profile.image.url != "/media/images/avatar.png":
+                    profile.image.delete()
+                profile.image = request.FILES['image']
+                profile.save()
+
+                return JsonResponse({
+                    "image": "{}{}".format(request.get_host(), profile.image.url)
+                }, status=200)
+            else:
+                return JsonResponse({
+                    "message": "File too large. Size should not exceed 5 MB",
+                    "code": "size"
+                }, status=400)
+        else:
+            return JsonResponse({
+                "message": "file not uploaded",
+                "code": "empty"
+            }, status=400)
+
+
+class UserLogoutView(View):
+    def get(self, request):
+        logout(request)
+        return JsonResponse({
+            "message": "succesfully logged out"
+        }, status=200)
+
+
+
+class ChangePasswordView(View):
+
+    validation_schema = {
+        'old_password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+        'new_password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+        'repeat_password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+        }
+    def post(self, request):
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status = 400)
+        data = json.loads(request.body)
+        current_user = request.user
+        if not current_user.check_password(data['old_password']):
+            return JsonResponse({
+                "message": "password is incorrect",
+            },
+            status=401
+            )
+        else:
+            if data['new_password'] == data['repeat_password']:
+                current_user.set_password(data['new_password'])
+                current_user.save()
+                return JsonResponse({
+                "message": "password successfully updated"
+            }, status=201)
+            else:
+                return JsonResponse({
+                    "message":"passwords doesn't match"
+                }, status=444)
+
+
+class ForgotPasswordView(View):
+    validation_schema = {
+        'email': {
+            'required': True,
+            'empty': False,
+            'type': 'string',
+            'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+        },  
+    }
+
+    def post(self, request):
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status = 400)
+        data = json.loads(request.body)
+        try:
+            user = User.objects.get(email=data['email'])
+        except ObjectDoesNotExist:
+            user = False
+        if user:
+            # send email
+            token_generator = TokenGenerator()
+            confirmation_email = EmailSender()
+            context = {
+                'uid': user.id,
+                'token': token_generator.make_token(user),
+            }
+            email = data['email']
+            mail_subject = 'Reset your password'
+            html_email = get_template('reset_password.html')
+            text_email = get_template('reset_password')
+            confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
+            return JsonResponse({
+                'message':'Check your email to change your password'
+            }, status=202)
+        else:
+            return JsonResponse({
+                'message':'Check your email to change your password'
+            }, status=200)
+
+
+class ResetPasswordView(View):
+
+    validation_schema = {
+        'uid': {
+            'required': True,
+            'type': 'integer',
+            'empty': False
+        },
+        'token': {
+            'required': True,
+            'type': 'string',
+            'empty': False
+        },
+        'password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+        'repeat_password': {
+            'required': True,
+            'type': 'string',
+            'minlength': 8,
+            'empty': False
+            },
+    }
+
+    def post(self, request):
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status=400)
+        else:
+            data = json.loads(request.body)
+
+        uid = data['uid']
+        token = data['token']
+        if data['password'] == data["repeat_password"]:
+            try:
+                user = User.objects.get(id=uid)
+            except ObjectDoesNotExist:
+                return JsonResponse({
+                    "message": "This user does not exist",
+                }, status=404)
+            token_generator = TokenGenerator()
+            if token_generator.check_token(user, token):
+                user.set_password(data['password'])
+                user.save()
+                return JsonResponse({
+                    "id": uid,
+                    "message": "password successfully updated"
+                }, status=201)
+            else:
+                return JsonResponse({
+                    "message": "activation link is invalid"
+                }, status=406)
+        else:
+            return JsonResponse({
+                    "message":"passwords doesn't match"
+                }, status=444)
