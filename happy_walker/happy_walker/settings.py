@@ -113,5 +113,3 @@ if "ENV" in os.environ:
         from happy_walker.dep_settings.prod_settings import *
     elif ENV == 'QA':
         from happy_walker.dep_settings.qa_settings import *
-
-LOGIN_URL = 'users.login_required_response.login_required_response'
