@@ -1,6 +1,6 @@
 {% autoescape on %}
 Welcome to Happy Walker
 Looks like you want to link this email to your HapyWalker account. Click this link below to proceed:
-https://a-qa-frontend-happy-walker.herokuapp.com/confirmation_email?uid={{uid}}&token={{token}}&new_email={{new_email}}
+{{host}}/confirmation_email?uid={{uid}}&token={{token}}&new_email={{new_email}}
 Thanks, Happy Walker Team
 {% endautoescape %}
