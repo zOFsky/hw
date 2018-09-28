@@ -601,12 +601,12 @@ class TestView(View):
         fit = googleapiclient.discovery.build(
             'fitness', 'v1', credentials=credentials)
 
-        # files = fit.users().dataSources().datasets().get(
-        #     dataSourceId='derived:com.google.step_count.delta:com.google.android.gms:estimated_steps',
-        #     userId='me', datasetId='0000000000000000000-1537971207000000000').execute()
+        files = fit.users().dataSources().datasets().get(
+            dataSourceId='derived:com.google.step_count.delta:com.google.android.gms:estimated_steps',
+            userId='me', datasetId='1400000000000000000-1537971207000000000').execute()
 
-        files = fit.users().dataSources().list(
-            userId='me').execute()
+        # files = fit.users().dataSources().list(
+        #     userId='me').execute()
 
 
         return JsonResponse(files)
