@@ -602,7 +602,7 @@ class TestView(View):
             'fitness', 'v1', credentials=credentials)
 
         files = fit.users().dataSources().datasets().get(
-            dataSourceId='derived:com.google.step_count.delta:com.google.android.gms:estimated_steps',
+            dataSourceId='raw:com.google.calories.expended:com.google.android.apps.fitness:user_input',
             userId='me', datasetId='1400000000000000000-1537971207000000000').execute()
 
         # files = fit.users().dataSources().list(
