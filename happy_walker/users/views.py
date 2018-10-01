@@ -536,3 +536,4 @@ class ResetPasswordView(View):
             return JsonResponse({
                     "message":"passwords doesn't match"
                 }, status=444)
+
