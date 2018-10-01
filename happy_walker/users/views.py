@@ -2,11 +2,13 @@ from django.contrib.auth.models import User
 from users.models import Profile
 from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.template.loader import get_template
 from django.views.generic import View
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
+from oauthlib.oauth2.rfc6749.errors import MissingCodeError
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.mixins import LoginRequiredMixin
 from google_auth_oauthlib.flow import Flow
@@ -576,7 +578,12 @@ class Oauth2Callback(View):
             redirect_uri='http://localhost:8000/oauth2callback')
 
         authorization_response = request.build_absolute_uri()
-        flow.fetch_token(authorization_response=authorization_response)
+
+        try:
+            flow.fetch_token(authorization_response=authorization_response)
+        except MissingCodeError:
+            return redirect(reverse('oauth'))
+
         credentials = flow.credentials
         request.session['credentials'] = credentials_to_dict(credentials)
 

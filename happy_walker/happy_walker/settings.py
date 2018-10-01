@@ -96,8 +96,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
@@ -105,6 +103,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+SCOPES = ['https://www.googleapis.com/auth/userinfo.profile',
+          'https://www.googleapis.com/auth/fitness.activity.read',
+          'https://www.googleapis.com/auth/fitness.location.read']
+CLIENT_SECRETS_FILE = 'users/client_secret.json'
+API_SERVICE_NAME = 'fitness'
+API_VERSION = 'v1'
+REDIRECT_URI = 'http://localhost:8000/oauth2callback'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
@@ -114,3 +120,6 @@ if "ENV" in os.environ:
         from happy_walker.dep_settings.prod_settings import *
     elif ENV == 'QA':
         from happy_walker.dep_settings.qa_settings import *
+else:
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
