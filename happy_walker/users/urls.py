@@ -15,5 +15,7 @@ urlpatterns = [
     path('forgot_password', csrf_exempt(ForgotPasswordView.as_view()), name='forgot_password'),
     path('reset_password', csrf_exempt(ResetPasswordView.as_view()), name='reset_password'),
     path('upload_photo', csrf_exempt(login_required(UploadPhotoView.as_view())), name='image'),
+    path('oauth', csrf_exempt(OAuth.as_view()), name='oauth'),
+    path('get', csrf_exempt(TestView.as_view()), name='get'),
     path('<user_id>', login_required(csrf_exempt(ProfileView.as_view())), name='profile'),
 ]
