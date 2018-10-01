@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from users.models import Profile
 from django.http import HttpResponse, HttpRequest, JsonResponse
+from django.shortcuts import redirect
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.template.loader import get_template
 from django.views.generic import View
@@ -8,6 +9,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.mixins import LoginRequiredMixin
+from google_auth_oauthlib.flow import Flow
+import google.oauth2.credentials
+import googleapiclient.discovery
 import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
@@ -539,3 +543,79 @@ class ResetPasswordView(View):
             return JsonResponse({
                     "message":"passwords doesn't match"
                 }, status=444)
+
+
+class OAuth(View):
+    def get(self, request):
+        # Create the flow using the client secrets file from the Google API
+        # Console.
+        flow = Flow.from_client_secrets_file(
+            'users/client_secret.json',
+            scopes=['https://www.googleapis.com/auth/userinfo.profile',
+                    'https://www.googleapis.com/auth/fitness.activity.read',
+                    'https://www.googleapis.com/auth/fitness.location.read'],
+            redirect_uri='http://localhost:8000/oauth2callback')
+
+        # Tell the user to go to the authorization URL.
+        authorization_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true'
+        )
+
+        return redirect(authorization_url)
+
+
+class Oauth2Callback(View):
+    def get(self, request):
+
+        flow = Flow.from_client_secrets_file(
+            'users/client_secret.json',
+            scopes=['https://www.googleapis.com/auth/userinfo.profile',
+                    'https://www.googleapis.com/auth/fitness.activity.read',
+                    'https://www.googleapis.com/auth/fitness.location.read'],
+            redirect_uri='http://localhost:8000/oauth2callback')
+
+        authorization_response = request.build_absolute_uri()
+        flow.fetch_token(authorization_response=authorization_response)
+        credentials = flow.credentials
+        request.session['credentials'] = credentials_to_dict(credentials)
+
+        return HttpResponse('success')
+
+
+class TestView(View):
+    def get(self, request):
+        if 'credentials' not in request.session:
+            return redirect('/oauth')
+
+        credentials = request.session['credentials']
+
+        credentials = google.oauth2.credentials.Credentials(
+            token=credentials['token'],
+            refresh_token=credentials['refresh_token'],
+            token_uri=credentials['token_uri'],
+            client_id=credentials['client_id'],
+            client_secret=credentials['client_secret'],
+            scopes=credentials['scopes'])
+
+        fit = googleapiclient.discovery.build(
+            'fitness', 'v1', credentials=credentials)
+
+        files = fit.users().dataSources().datasets().get(
+            dataSourceId='derived:com.google.step_count.delta:com.google.android.gms:estimated_steps',
+            userId='me', datasetId='1400000000000000000-1537971207000000000').execute()
+
+        # files = fit.users().dataSources().list(
+        #     userId='me').execute()
+
+
+        return JsonResponse(files)
+
+
+def credentials_to_dict(credentials):
+    return {'token': credentials.token,
+            'refresh_token': credentials.refresh_token,
+            'token_uri': credentials.token_uri,
+            'client_id': credentials.client_id,
+            'client_secret': credentials.client_secret,
+            'scopes': credentials.scopes}
