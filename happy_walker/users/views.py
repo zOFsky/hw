@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from users.models import Profile
+from users.models import Profile, Location
 from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -289,6 +289,22 @@ class ProfileView(LoginRequiredMixin, View):
             'required': True,
             'type': 'string',
             'empty': False,
+        },
+        'location': {
+            'required': True,
+            'empty': True,
+            'type': 'dict',
+            'schema': {
+                'city': {
+                    'type': 'string'
+                },
+                'lat': {
+                    'type': 'integer'
+                },
+                'lng': {
+                    'type': 'integer'
+                }
+            }
         }
     }
 
@@ -331,9 +347,13 @@ class ProfileView(LoginRequiredMixin, View):
         else:
             data = json.loads(request.body)
             user = User.objects.get(id=request.user.id)
+            profile = Profile.objects.get(user_id=request.user.id)
 
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
+            profile.location = Location(lat=data['location']['lat'], lng=data['location']['lng'],
+                                        city=data['location']['city'])
+            profile.save()
             user.save()
 
             if data["email"] != user.email:
