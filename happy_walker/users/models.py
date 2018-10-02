@@ -5,8 +5,8 @@ from django.dispatch import receiver
 
 
 class Location(models.Model):
-    lat = models.IntegerField()
-    lng = models.IntegerField()
+    lat = models.FloatField()
+    lng = models.FloatField()
     city = models.TextField()
 
     class Meta:

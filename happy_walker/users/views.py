@@ -10,7 +10,6 @@ from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
 from oauthlib.oauth2.rfc6749.errors import MissingCodeError
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.mixins import LoginRequiredMixin
 from google_auth_oauthlib.flow import Flow
 import google.oauth2.credentials
 import googleapiclient.discovery
@@ -272,7 +271,7 @@ class UserLoginView(View):
                 }, status=467)
 
 
-class ProfileView(LoginRequiredMixin, View):
+class ProfileView(View):
 
     validation_schema = {
         'email': {
@@ -300,11 +299,11 @@ class ProfileView(LoginRequiredMixin, View):
                     'empty': False
                 },
                 'lat': {
-                    'type': 'integer',
+                    'type': 'number',
                     'empty': False
                 },
                 'lng': {
-                    'type': 'integer',
+                    'type': 'number',
                     'empty': False
                 }
             }
