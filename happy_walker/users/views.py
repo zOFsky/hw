@@ -300,11 +300,11 @@ class ProfileView(LoginRequiredMixin, View):
                     'empty': False
                 },
                 'lat': {
-                    'type': 'integer',
+                    'type': 'number',
                     'empty': False
                 },
                 'lng': {
-                    'type': 'integer',
+                    'type': 'number',
                     'empty': False
                 }
             }
