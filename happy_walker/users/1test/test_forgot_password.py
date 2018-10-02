@@ -35,10 +35,9 @@ class LoginTest(TestCase):
         self.assertEqual(resp3.status_code, 202)
 
     @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
-    
     def test_forgot_pass_with_empty_data(self):
         forgot_data = self.methods.create_json_request(email=None)
-        resp2 = self.client.post(self.forgot_url, forgot_data, 
+        resp2 = self.client.post(self.forgot_url, forgot_data,
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 400)
 

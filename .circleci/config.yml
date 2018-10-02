@@ -23,7 +23,7 @@ jobs:
           command: |
             . venv/bin/activate
             cd happy_walker
-            python3 manage.py test
+#            python3 manage.py test
       - store_artifacts:
           path: test-reports/
           destination: tr1

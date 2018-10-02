@@ -1,12 +1,14 @@
 from django.contrib.auth.models import User
-from users.models import Profile
+from users.models import Profile, Location
 from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.template.loader import get_template
 from django.views.generic import View
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
+from oauthlib.oauth2.rfc6749.errors import MissingCodeError
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.mixins import LoginRequiredMixin
 from google_auth_oauthlib.flow import Flow
@@ -287,6 +289,25 @@ class ProfileView(LoginRequiredMixin, View):
             'required': True,
             'type': 'string',
             'empty': False,
+        },
+        'location': {
+            'required': True,
+            'empty': True,
+            'type': 'dict',
+            'schema': {
+                'city': {
+                    'type': 'string',
+                    'empty': False
+                },
+                'lat': {
+                    'type': 'integer',
+                    'empty': False
+                },
+                'lng': {
+                    'type': 'integer',
+                    'empty': False
+                }
+            }
         }
     }
 
@@ -305,7 +326,13 @@ class ProfileView(LoginRequiredMixin, View):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'image': "{}{}".format(request.get_host(), user.profile.image.url)
+            'image': "{}{}".format(request.get_host(), user.profile.image.url),
+            'favorites': user.profile.favorites,
+            'location': {
+                'city': user.profile.location.city,
+                'lat': user.profile.location.lat,
+                'lng': user.profile.location.lng
+            }
         }
 
         if user_id == str(request.user.id) or user_id == 'me':
@@ -329,10 +356,20 @@ class ProfileView(LoginRequiredMixin, View):
         else:
             data = json.loads(request.body)
             user = User.objects.get(id=request.user.id)
+            profile = Profile.objects.get(user_id=request.user.id)
 
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
+
             user.save()
+
+            if data['location']:
+                profile.location = Location(lat=data['location']['lat'], lng=data['location']['lng'],
+                                            city=data['location']['city'])
+                profile.save()
+            else:
+                profile.location = Location()
+                profile.save()
 
             if data["email"] != user.email:
                 # sending confirmation letter to new email
@@ -355,6 +392,25 @@ class ProfileView(LoginRequiredMixin, View):
             return JsonResponse({
                 "message": "user successfully updated"
             }, status=201)
+
+
+class FavoritesView(View):
+
+    def get(self, request, favorite_id):
+        profile = Profile.objects.get(user_id=request.user.id)
+        favorite_id = int(favorite_id)
+
+        if favorite_id in profile.favorites:
+            profile.favorites.remove(favorite_id)
+        else:
+            profile.favorites.append(favorite_id)
+
+        profile.save()
+
+        return JsonResponse({
+            "message": "Success",
+            "favorites": profile.favorites
+        }, status=200)
 
 
 class UploadPhotoView(View):
@@ -576,7 +632,12 @@ class Oauth2Callback(View):
             redirect_uri='http://localhost:8000/oauth2callback')
 
         authorization_response = request.build_absolute_uri()
-        flow.fetch_token(authorization_response=authorization_response)
+
+        try:
+            flow.fetch_token(authorization_response=authorization_response)
+        except MissingCodeError:
+            return redirect(reverse('oauth'))
+
         credentials = flow.credentials
         request.session['credentials'] = credentials_to_dict(credentials)
 
@@ -602,7 +663,7 @@ class TestView(View):
             'fitness', 'v1', credentials=credentials)
 
         files = fit.users().dataSources().datasets().get(
-            dataSourceId='derived:com.google.step_count.delta:com.google.android.gms:estimated_steps',
+            dataSourceId='raw:com.google.calories.expended:com.google.android.apps.fitness:user_input',
             userId='me', datasetId='1400000000000000000-1537971207000000000').execute()
 
         # files = fit.users().dataSources().list(
@@ -619,3 +680,25 @@ def credentials_to_dict(credentials):
             'client_id': credentials.client_id,
             'client_secret': credentials.client_secret,
             'scopes': credentials.scopes}
+
+
+class TopWalkersView(View):
+
+    def get(self, request):
+
+        user = User.objects.get(id=request.user.id)
+        lat = user.profile.location.lat
+        lng = user.profile.location.lng
+
+        top_walkers = []
+        data = Profile.objects.filter(location={'lat': lat, 'lng': lng}).exclude(user_id=request.user.id)
+        data = data[::1]
+        for walker in data:
+            dict = {}
+            dict['image'] = "{}{}".format(request.get_host(), user.profile.image.url),
+            dict['id'] = walker.user_id
+            dict['first_name'] = walker.user.first_name
+            dict['last_name'] = walker.user.last_name
+            top_walkers.append(dict)
+
+        return JsonResponse(top_walkers, safe=False, status=200)

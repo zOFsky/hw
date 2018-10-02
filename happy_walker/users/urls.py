@@ -17,5 +17,7 @@ urlpatterns = [
     path('upload_photo', csrf_exempt(login_required(UploadPhotoView.as_view())), name='image'),
     path('oauth', csrf_exempt(OAuth.as_view()), name='oauth'),
     path('get', csrf_exempt(TestView.as_view()), name='get'),
+    path('top_walkers', login_required(csrf_exempt(TopWalkersView.as_view())), name='top_walkers'),
+    path('favorite/<favorite_id>', login_required(csrf_exempt(FavoritesView.as_view())), name='favorites'),
     path('<user_id>', login_required(csrf_exempt(ProfileView.as_view())), name='profile'),
 ]
