@@ -296,13 +296,16 @@ class ProfileView(LoginRequiredMixin, View):
             'type': 'dict',
             'schema': {
                 'city': {
-                    'type': 'string'
+                    'type': 'string',
+                    'empty': False
                 },
                 'lat': {
-                    'type': 'integer'
+                    'type': 'integer',
+                    'empty': False
                 },
                 'lng': {
-                    'type': 'integer'
+                    'type': 'integer',
+                    'empty': False
                 }
             }
         }
@@ -323,7 +326,13 @@ class ProfileView(LoginRequiredMixin, View):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'image': "{}{}".format(request.get_host(), user.profile.image.url)
+            'image': "{}{}".format(request.get_host(), user.profile.image.url),
+            'favorites': user.profile.favorites,
+            'location': {
+                'city': user.profile.location.city,
+                'lat': user.profile.location.lat,
+                'lng': user.profile.location.lng
+            }
         }
 
         if user_id == str(request.user.id) or user_id == 'me':
@@ -351,10 +360,16 @@ class ProfileView(LoginRequiredMixin, View):
 
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
-            profile.location = Location(lat=data['location']['lat'], lng=data['location']['lng'],
-                                        city=data['location']['city'])
-            profile.save()
+
             user.save()
+
+            if data['location']:
+                profile.location = Location(lat=data['location']['lat'], lng=data['location']['lng'],
+                                            city=data['location']['city'])
+                profile.save()
+            else:
+                profile.location = Location()
+                profile.save()
 
             if data["email"] != user.email:
                 # sending confirmation letter to new email
@@ -377,6 +392,25 @@ class ProfileView(LoginRequiredMixin, View):
             return JsonResponse({
                 "message": "user successfully updated"
             }, status=201)
+
+
+class FavoritesView(View):
+
+    def get(self, request, favorite_id):
+        profile = Profile.objects.get(user_id=request.user.id)
+        favorite_id = int(favorite_id)
+
+        if favorite_id in profile.favorites:
+            profile.favorites.remove(favorite_id)
+        else:
+            profile.favorites.append(favorite_id)
+
+        profile.save()
+
+        return JsonResponse({
+            "message": "Success",
+            "favorites": profile.favorites
+        }, status=200)
 
 
 class UploadPhotoView(View):
@@ -646,3 +680,25 @@ def credentials_to_dict(credentials):
             'client_id': credentials.client_id,
             'client_secret': credentials.client_secret,
             'scopes': credentials.scopes}
+
+
+class TopWalkersView(View):
+
+    def get(self, request):
+
+        user = User.objects.get(id=request.user.id)
+        lat = user.profile.location.lat
+        lng = user.profile.location.lng
+
+        top_walkers = []
+        data = Profile.objects.filter(location={'lat': lat, 'lng': lng}).exclude(user_id=request.user.id)
+        data = data[::1]
+        for walker in data:
+            dict = {}
+            dict['image'] = "{}{}".format(request.get_host(), user.profile.image.url),
+            dict['id'] = walker.user_id
+            dict['first_name'] = walker.user.first_name
+            dict['last_name'] = walker.user.last_name
+            top_walkers.append(dict)
+
+        return JsonResponse(top_walkers, safe=False, status=200)
