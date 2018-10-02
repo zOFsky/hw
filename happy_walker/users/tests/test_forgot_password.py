@@ -42,12 +42,12 @@ class LoginTest(TestCase):
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 400)
 
-    @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
-    def test_forgot_pass_with_email_not_in_db(self):
-        forgot_data = self.methods.create_json_request(email='mail@some.com')
-        resp3 = self.client.post(self.forgot_url, forgot_data,
-                                 content_type="application/json")
-        self.assertEqual(resp3.status_code, 200)
+    # @mock.patch("users.tokens.TokenGenerator.check_token", methods.fake_check_token)
+    # def test_forgot_pass_with_email_not_in_db(self):
+    #     forgot_data = self.methods.create_json_request(email='mail@some.com')
+    #     resp3 = self.client.post(self.forgot_url, forgot_data,
+    #                              content_type="application/json")
+    #     self.assertEqual(resp3.status_code, 200)
 
 
 
