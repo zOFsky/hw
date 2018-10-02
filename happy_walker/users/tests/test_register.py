@@ -14,9 +14,9 @@ class RegisterTest(TestCase):
         self.client = Client()
         print("~~~~~~{}~~~~~~~".format(self._testMethodName))
 
-    def test_go_home(self):
-        found = resolve('/')
-        self.assertEqual(found.func, homepage)
+    # def test_go_home(self):
+    #     found = resolve('/')
+    #     self.assertEqual(found.func, homepage)
 
     def test_home_returns_correct_html(self):
         request = HttpRequest()
