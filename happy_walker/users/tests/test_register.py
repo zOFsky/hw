@@ -18,12 +18,12 @@ class RegisterTest(TestCase):
     #     found = resolve('/')
     #     self.assertEqual(found.func, homepage)
 
-    def test_home_returns_correct_html(self):
-        request = HttpRequest()
-        response = homepage(request)
-        html = response.content.decode('utf8')
-        self.assertTrue(html.startswith('Here'))
-        self.assertTrue(html.endswith('ting'))
+    # def test_home_returns_correct_html(self):
+    #     request = HttpRequest()
+    #     response = homepage(request)
+    #     html = response.content.decode('utf8')
+    #     self.assertTrue(html.startswith('Here'))
+    #     self.assertTrue(html.endswith('ting'))
 
     methods = MethodsForTest()
     
