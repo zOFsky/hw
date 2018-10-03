@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
-from users.models import Profile, Location
+from django.conf import settings
+from users.models import Profile, Location, OAuthData
 from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -17,6 +18,10 @@ import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
 from .email_sender import EmailSender
+import time
+import calendar
+from random import choice
+from string import ascii_uppercase
 
 
 class UserRegisterView(View):
@@ -146,10 +151,7 @@ class ConfirmEmailView(View):
         if token_generator.check_token(user, token):
             User.objects.filter(id=uid).update(is_active='True')
             login(request, user)
-            return JsonResponse({
-                "id": uid,
-                "message": "user successfully activated"
-            }, status=200)
+            return redirect('oauth')
         else:
             return JsonResponse({
                 "errors": [{
@@ -602,16 +604,12 @@ class ResetPasswordView(View):
 
 class OAuth(View):
     def get(self, request):
-        # Create the flow using the client secrets file from the Google API
-        # Console.
-        flow = Flow.from_client_secrets_file(
-            'users/client_secret.json',
-            scopes=['https://www.googleapis.com/auth/userinfo.profile',
-                    'https://www.googleapis.com/auth/fitness.activity.read',
-                    'https://www.googleapis.com/auth/fitness.location.read'],
-            redirect_uri='http://localhost:8000/oauth2callback')
 
-        # Tell the user to go to the authorization URL.
+        flow = Flow.from_client_secrets_file(
+            settings.CLIENT_SECRETS_FILE,
+            scopes=settings.SCOPES,
+            redirect_uri=settings.REDIRECT_URI)
+
         authorization_url, state = flow.authorization_url(
             access_type='offline',
             include_granted_scopes='true'
@@ -624,11 +622,9 @@ class Oauth2Callback(View):
     def get(self, request):
 
         flow = Flow.from_client_secrets_file(
-            'users/client_secret.json',
-            scopes=['https://www.googleapis.com/auth/userinfo.profile',
-                    'https://www.googleapis.com/auth/fitness.activity.read',
-                    'https://www.googleapis.com/auth/fitness.location.read'],
-            redirect_uri='http://localhost:8000/oauth2callback')
+            settings.CLIENT_SECRETS_FILE,
+            scopes=settings.SCOPES,
+            redirect_uri=settings.REDIRECT_URI)
 
         authorization_response = request.build_absolute_uri()
 
@@ -638,25 +634,53 @@ class Oauth2Callback(View):
             return redirect(reverse('oauth'))
 
         credentials = flow.credentials
-        request.session['credentials'] = credentials_to_dict(credentials)
 
-        return HttpResponse('success')
+        if request.user.is_authenticated:
+            OAuthData.objects.create(user_id=request.user.id, token=credentials.token,
+                                     refresh_token=credentials.refresh_token, token_uri=credentials.token_uri,
+                                     client_id=credentials.client_id, client_secret=credentials.client_secret,
+                                     scopes=credentials.scopes)
+
+            return JsonResponse({
+                "id": request.user.id,
+                "message": "user successfully activated"
+            }, status=200)
+        else:
+            profile = googleapiclient.discovery.build(
+                'plus', 'v1', credentials=credentials)
+            profile = profile.people().get(userId='me').execute()
+            email = profile['emails'][0]['value']
+
+            if User.objects.filter(email=email).exists():
+                user = User.objects.get(email=email)
+                login(request, user)
+            else:
+                first_name = profile['name']['givenName']
+                last_name = profile['name']['familyName']
+                nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
+                password = ''.join(choice(ascii_uppercase) for i in range(12))
+                user = User.objects.create_user(username=nickname, email=email,
+                    password=password, first_name=first_name,
+                    last_name=last_name, is_active=True)
+                OAuthData.objects.create(user_id=user.id, token=credentials.token,
+                                         refresh_token=credentials.refresh_token, token_uri=credentials.token_uri,
+                                         client_id=credentials.client_id, client_secret=credentials.client_secret,
+                                         scopes=credentials.scopes)
+
+                login(request, user)
+
+        return JsonResponse({
+            "message": "login successfull",
+        }, status=200)
 
 
 class TestView(View):
     def get(self, request):
-        if 'credentials' not in request.session:
-            return redirect('/oauth')
+        if not OAuthData.objects.filter(user_id=request.user.id):
+            return redirect('oauth')
 
-        credentials = request.session['credentials']
-
-        credentials = google.oauth2.credentials.Credentials(
-            token=credentials['token'],
-            refresh_token=credentials['refresh_token'],
-            token_uri=credentials['token_uri'],
-            client_id=credentials['client_id'],
-            client_secret=credentials['client_secret'],
-            scopes=credentials['scopes'])
+        credentials = OAuthData.objects.get(user_id=request.user.id)
+        credentials = google.oauth2.credentials.Credentials(**credentials_to_dict(credentials))
 
         fit = googleapiclient.discovery.build(
             'fitness', 'v1', credentials=credentials)
@@ -667,7 +691,6 @@ class TestView(View):
 
         # files = fit.users().dataSources().list(
         #     userId='me').execute()
-
 
         return JsonResponse(files)
 
