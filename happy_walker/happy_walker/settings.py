@@ -106,6 +106,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 SCOPES = ['https://www.googleapis.com/auth/userinfo.profile',
+          'https://www.googleapis.com/auth/plus.profile.emails.read',
+          'https://www.googleapis.com/auth/plus.me',
           'https://www.googleapis.com/auth/fitness.activity.read',
           'https://www.googleapis.com/auth/fitness.location.read']
 CLIENT_SECRETS_FILE = 'users/client_secret.json'
