@@ -1,3 +1,4 @@
+import time
 from django.contrib.auth.models import User
 from users.models import Profile
 from django.http import HttpResponse, HttpRequest, JsonResponse
@@ -16,6 +17,7 @@ import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
 from .email_sender import EmailSender
+from . import epochtime
 
 
 class UserRegisterView(View):
@@ -392,7 +394,6 @@ class UserLogoutView(View):
         }, status=200)
 
 
-
 class ChangePasswordView(View):
 
     validation_schema = {
@@ -609,6 +610,7 @@ class TestView(View):
         #     userId='me').execute()
 
 
+#        return JsonResponse(credentials_to_dict(credentials))
         return JsonResponse(files)
 
 
@@ -619,3 +621,87 @@ def credentials_to_dict(credentials):
             'client_id': credentials.client_id,
             'client_secret': credentials.client_secret,
             'scopes': credentials.scopes}
+
+
+
+class FitDataView(View):
+    def get(self, request):
+        if 'credentials' not in request.session:
+            return redirect('/oauth')
+
+        credentials = request.session['credentials']
+
+        credentials = google.oauth2.credentials.Credentials(
+            token=credentials['token'],
+            refresh_token=credentials['refresh_token'],
+            token_uri=credentials['token_uri'],
+            client_id=credentials['client_id'],
+            client_secret=credentials['client_secret'],
+            scopes=credentials['scopes'])
+
+        fit = googleapiclient.discovery.build(
+            'fitness', 'v1', credentials=credentials)
+
+        
+        million = 1000000
+        current_time = epochtime.date_to_epoch() * 1000
+        week = epochtime.week * million
+        day = epochtime.day * million
+
+        step_list = [{"dataTypeName": "com.google.step_count.delta",
+           "dataSourceId": "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps"
+           }]
+        distance_list = [{"dataTypeName": "com.google.distance.delta"
+                      }]
+        calor_list = [{"dataTypeName": "com.google.calories.expended"
+                      }]
+
+        bucket_dict = { "durationMillis": epochtime.day }
+
+        step_request = create_json_request(aggregateBy=step_list,
+            bucketByTime=bucket_dict, startTimeMillis=(current_time - epochtime.week),
+            endTimeMillis=current_time)
+        
+        distance_request = create_json_request(aggregateBy=distance_list,
+            bucketByTime=bucket_dict, startTimeMillis=(current_time - epochtime.week),
+            endTimeMillis=current_time)
+
+        calor_request = create_json_request(aggregateBy=calor_list,
+            bucketByTime=bucket_dict, startTimeMillis=(current_time - epochtime.week),
+            endTimeMillis=current_time)
+
+
+        step_data = fit.users().dataset().aggregate(userId='me', 
+            body=json.loads(step_request)).execute()
+
+        distance_data = fit.users().dataset().aggregate(userId='me', 
+            body=json.loads(distance_request)).execute()
+
+        calor_data = fit.users().dataset().aggregate(userId='me', 
+            body=json.loads(calor_request)).execute()
+        
+        list_by_days = get_value_from_json(json.dumps(calor_data))
+        dict_by_days = { i : list_by_days[i] for i in range(0, len(list_by_days)) }
+        response = json.dumps(dict_by_days)
+        #return JsonResponse(calor_data)
+        return JsonResponse(dict_by_days)
+        # return JsonResponse(files)
+
+def create_json_request(**kwargs):
+    my_dict = {}
+
+    for key, value in kwargs.items():
+        my_dict[key] = value
+
+    json_string = json.dumps(my_dict)
+    return json_string
+
+def get_value_from_json(json_string):
+    parsed_json = json.loads(json_string)
+    calories_by_day_list = []
+    for elem in parsed_json["bucket"]:
+        calories_by_day_list.append(
+            elem["dataset"][0]["point"][0]["value"][0]["fpVal"]
+        )
+    return calories_by_day_list
+        
