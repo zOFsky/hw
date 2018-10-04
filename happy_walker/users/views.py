@@ -151,7 +151,9 @@ class ConfirmEmailView(View):
         if token_generator.check_token(user, token):
             User.objects.filter(id=uid).update(is_active='True')
             login(request, user)
-            return redirect('oauth')
+            return JsonResponse({
+                "message": "user successfully activated"
+            }, status=200)
         else:
             return JsonResponse({
                 "errors": [{
@@ -636,15 +638,15 @@ class Oauth2Callback(View):
         credentials = flow.credentials
 
         if request.user.is_authenticated:
-            OAuthData.objects.create(user_id=request.user.id, token=credentials.token,
-                                     refresh_token=credentials.refresh_token, token_uri=credentials.token_uri,
-                                     client_id=credentials.client_id, client_secret=credentials.client_secret,
-                                     scopes=credentials.scopes)
+            OAuthData.objects.update_or_create(user_id=request.user.id,
+                                               defaults={'user_id': request.user.id, 'token': credentials.token,
+                                                         'refresh_token': credentials.refresh_token,
+                                                         'token_uri': credentials.token_uri,
+                                                         'client_id': credentials.client_id,
+                                                         'client_secret': credentials.client_secret,
+                                                         'scopes': credentials.scopes
+                                                         })
 
-            return JsonResponse({
-                "id": request.user.id,
-                "message": "user successfully activated"
-            }, status=200)
         else:
             profile = googleapiclient.discovery.build(
                 'plus', 'v1', credentials=credentials)
@@ -659,9 +661,8 @@ class Oauth2Callback(View):
                 last_name = profile['name']['familyName']
                 nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
                 password = ''.join(choice(ascii_uppercase) for i in range(12))
-                user = User.objects.create_user(username=nickname, email=email,
-                    password=password, first_name=first_name,
-                    last_name=last_name, is_active=True)
+                user = User.objects.create_user(username=nickname, email=email, password=password,
+                                                first_name=first_name, last_name=last_name, is_active=True)
                 OAuthData.objects.create(user_id=user.id, token=credentials.token,
                                          refresh_token=credentials.refresh_token, token_uri=credentials.token_uri,
                                          client_id=credentials.client_id, client_secret=credentials.client_secret,
@@ -685,12 +686,12 @@ class TestView(View):
         fit = googleapiclient.discovery.build(
             'fitness', 'v1', credentials=credentials)
 
-        files = fit.users().dataSources().datasets().get(
-            dataSourceId='raw:com.google.calories.expended:com.google.android.apps.fitness:user_input',
-            userId='me', datasetId='1400000000000000000-1537971207000000000').execute()
+        # files = fit.users().dataSources().datasets().get(
+        #     dataSourceId='raw:com.google.calories.expended:com.google.android.apps.fitness:user_input',
+        #     userId='me', datasetId='1400000000000000000-1537971207000000000').execute()
 
-        # files = fit.users().dataSources().list(
-        #     userId='me').execute()
+        files = fit.users().dataSources().list(
+            userId='me').execute()
 
         return JsonResponse(files)
 
@@ -709,6 +710,10 @@ class TopWalkersView(View):
     def get(self, request):
 
         user = User.objects.get(id=request.user.id)
+
+        if user.profile.location.city == '':
+            return JsonResponse({'top_walkers': []}, status=200)
+
         lat = user.profile.location.lat
         lng = user.profile.location.lng
 
@@ -723,4 +728,4 @@ class TopWalkersView(View):
             dict['last_name'] = walker.user.last_name
             top_walkers.append(dict)
 
-        return JsonResponse(top_walkers, safe=False, status=200)
+        return JsonResponse({'top_walkers': top_walkers}, status=200)
