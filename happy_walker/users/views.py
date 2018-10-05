@@ -607,8 +607,10 @@ class OAuth(View):
             include_granted_scopes='true'
         )
 
-        return redirect(authorization_url)
-
+        # return redirect(authorization_url)
+        return JsonResponse({
+            "url": authorization_url,
+        }, status=200)
 
 class Oauth2Callback(View):
     def get(self, request):
