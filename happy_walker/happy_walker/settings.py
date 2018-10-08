@@ -127,5 +127,5 @@ if "ENV" in os.environ:
     elif ENV == 'QA':
         from happy_walker.dep_settings.qa_settings import *
 else:
-    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'

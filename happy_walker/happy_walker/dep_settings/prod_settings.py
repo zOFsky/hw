@@ -4,7 +4,7 @@ DEBUG = False
 
 SECRET_KEY = os.environ['SECRET_KEY']
 # REDIRECT_URI = os.environ['REDIRECT_URI']
-REDIRECT_URI = 'a-qa-frontend-happy-walker.herokuapp.com/oauth2callback'
+REDIRECT_URI = 'http://localhost:3000/oauth2callback'
 
 ALLOWED_HOSTS = ['a-qa-backend-happy-walker.herokuapp.com', 'a-prod-backend-happy-walker.herokuapp.com']
 
