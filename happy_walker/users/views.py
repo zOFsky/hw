@@ -596,7 +596,6 @@ class ResetPasswordView(View):
 
 class OAuth(View):
     def get(self, request):
-
         flow = Flow.from_client_secrets_file(
             settings.CLIENT_SECRETS_FILE,
             scopes=settings.SCOPES,
@@ -606,64 +605,60 @@ class OAuth(View):
             access_type='offline',
             include_granted_scopes='true'
         )
+        return JsonResponse({"url": authorization_url}, status=200)
 
-        # return redirect(authorization_url)
-        return JsonResponse({
-            "url": authorization_url,
-        }, status=200)
 
 class Oauth2Callback(View):
     def get(self, request):
 
         flow = Flow.from_client_secrets_file(
             settings.CLIENT_SECRETS_FILE,
-            scopes=settings.SCOPES,
-            redirect_uri=settings.REDIRECT_URI)
+            scopes=None,
+            redirect_uri='a-qa-frontend-happy-walker.herokuapp.com/oauth2callback')
 
         authorization_response = request.build_absolute_uri()
-
         try:
             flow.fetch_token(authorization_response=authorization_response)
         except MissingCodeError:
-            return redirect(reverse('oauth'))
+            return HttpResponse('error')
 
         credentials = flow.credentials
 
-        if request.user.is_authenticated:
-            OAuthData.objects.update_or_create(user_id=request.user.id,
-                                               defaults={'user_id': request.user.id, 'token': credentials.token,
-                                                         'refresh_token': credentials.refresh_token,
-                                                         'token_uri': credentials.token_uri,
-                                                         'client_id': credentials.client_id,
-                                                         'client_secret': credentials.client_secret,
-                                                         'scopes': credentials.scopes
-                                                         })
-
-        else:
-            profile = googleapiclient.discovery.build(
-                'plus', 'v1', credentials=credentials)
-            profile = profile.people().get(userId='me').execute()
-            email = profile['emails'][0]['value']
-
-            if User.objects.filter(email=email).exists():
-                user = User.objects.get(email=email)
-                login(request, user)
-            else:
-                first_name = profile['name']['givenName']
-                last_name = profile['name']['familyName']
-                nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
-                password = ''.join(choice(ascii_uppercase) for i in range(12))
-                user = User.objects.create_user(username=nickname, email=email, password=password,
-                                                first_name=first_name, last_name=last_name, is_active=True)
-                OAuthData.objects.create(user_id=user.id, token=credentials.token,
-                                         refresh_token=credentials.refresh_token, token_uri=credentials.token_uri,
-                                         client_id=credentials.client_id, client_secret=credentials.client_secret,
-                                         scopes=credentials.scopes)
-
-                login(request, user)
+        # if request.user.is_authenticated:
+        #     OAuthData.objects.update_or_create(user_id=request.user.id,
+        #                                        defaults={'user_id': request.user.id, 'token': credentials.token,
+        #                                                  'refresh_token': credentials.refresh_token,
+        #                                                  'token_uri': credentials.token_uri,
+        #                                                  'client_id': credentials.client_id,
+        #                                                  'client_secret': credentials.client_secret,
+        #                                                  'scopes': credentials.scopes
+        #                                                  })
+        #
+        # else:
+        #     profile = googleapiclient.discovery.build(
+        #         'plus', 'v1', credentials=credentials)
+        #     profile = profile.people().get(userId='me').execute()
+        #     email = profile['emails'][0]['value']
+        #
+        #     if User.objects.filter(email=email).exists():
+        #         user = User.objects.get(email=email)
+        #         login(request, user)
+        #     else:
+        #         first_name = profile['name']['givenName']
+        #         last_name = profile['name']['familyName']
+        #         nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
+        #         password = ''.join(choice(ascii_uppercase) for i in range(12))
+        #         user = User.objects.create_user(username=nickname, email=email, password=password,
+        #                                         first_name=first_name, last_name=last_name, is_active=True)
+        #         OAuthData.objects.create(user_id=user.id, token=credentials.token,
+        #                                  refresh_token=credentials.refresh_token, token_uri=credentials.token_uri,
+        #                                  client_id=credentials.client_id, client_secret=credentials.client_secret,
+        #                                  scopes=credentials.scopes)
+        #
+        #         login(request, user)
 
         return JsonResponse({
-            "message": "login successfull",
+            "message": credentials,
         }, status=200)
 
 
