@@ -116,7 +116,7 @@ SCOPES = [
 CLIENT_SECRETS_FILE = 'users/client_secret.json'
 API_SERVICE_NAME = 'fitness'
 API_VERSION = 'v1'
-REDIRECT_URI = 'http://localhost:8000/oauth2callback'
+REDIRECT_URI = 'https://a-qa-frontend-happy-walker.herokuapp.com/oauth2callback'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
@@ -127,5 +127,4 @@ if "ENV" in os.environ:
     elif ENV == 'QA':
         from happy_walker.dep_settings.qa_settings import *
 else:
-
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
