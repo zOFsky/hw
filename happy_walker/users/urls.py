@@ -17,6 +17,8 @@ urlpatterns = [
     path('upload_photo', csrf_exempt(login_required(UploadPhotoView.as_view())), name='image'),
     path('oauth', csrf_exempt(OAuth.as_view()), name='oauth'),
     path('get', csrf_exempt(TestView.as_view()), name='get'),
-    path('fit_data', csrf_exempt(FitDataView.as_view()), name='fit_data'),
+    path('fit_data', csrf_exempt(FitDataView.as_view()), name='fit_data'),    
+    path('last_days', csrf_exempt(LastNDaysView.as_view()), name='last_days'),
+    path('save_fit_data', csrf_exempt(SaveFitDataView.as_view()), name='save_fit_data'),
     path('<user_id>', login_required(csrf_exempt(ProfileView.as_view())), name='profile'),
 ]

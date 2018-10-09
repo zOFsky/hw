@@ -12,3 +12,6 @@ def date_to_epoch():
     format = '%Y-%m-%d'
     date = f'{now.year}-{now.month}-{now.day}'
     return(time.mktime(time.strptime(date, format)))
+
+def epoch_to_date(time_milis):
+    return time.strftime('%Y-%m-%d', time.localtime(time_milis/1000))
