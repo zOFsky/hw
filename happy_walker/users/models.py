@@ -20,18 +20,10 @@ class Profile(models.Model):
     location = models.EmbeddedModelField(
         model_container=Location,
     )
+    access_token = models.CharField(max_length=255, null=True)
+    refresh_token = models.CharField(max_length=255, null=True)
 
     objects = models.DjongoManager()
-
-
-class OAuthData(models.Model):
-    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
-    token = models.CharField(max_length=255)
-    refresh_token = models.CharField(max_length=255)
-    token_uri = models.CharField(max_length=255)
-    client_id = models.CharField(max_length=255)
-    client_secret = models.CharField(max_length=255)
-    scopes = models.ListField()
 
 
 @receiver(post_save, sender=get_user_model())

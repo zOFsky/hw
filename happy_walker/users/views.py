@@ -1,9 +1,7 @@
 from django.contrib.auth.models import User
 from django.conf import settings
-from users.models import Profile, Location, OAuthData
+from users.models import Profile, Location
 from django.http import HttpResponse, HttpRequest, JsonResponse
-from django.shortcuts import redirect
-from django.urls import reverse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.template.loader import get_template
 from django.views.generic import View
@@ -259,6 +257,11 @@ class UserLoginView(View):
             user = authenticate(username=existing_user.username, 
                                 password=data['password'])
             if user is not None:
+
+                profile = Profile.objects.get(user_id=existing_user.id)
+                if not profile.refresh_token:
+                    return JsonResponse({"message": "user did not give access"}, status=423)
+
                 login(request, user)
                 if not request.session.exists(request.session.session_key):
                     request.session.create() 
@@ -595,80 +598,88 @@ class ResetPasswordView(View):
 
 
 class OAuth(View):
-    def get(self, request):
-        flow = Flow.from_client_secrets_file(
-            settings.CLIENT_SECRETS_FILE,
-            scopes=settings.SCOPES,
-            redirect_uri=settings.REDIRECT_URI)
 
-        authorization_url, state = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='true'
-        )
-        return JsonResponse({"url": authorization_url}, status=200)
+    validation_schema = {
+        'code': {
+            'required': True,
+            'type': 'string',
+            'empty': False
+        }
+    }
 
+    def post(self, request):
 
-class Oauth2Callback(View):
-    def get(self, request):
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status=400)
+        else:
+            data = json.loads(request.body)
 
         flow = Flow.from_client_secrets_file(
             settings.CLIENT_SECRETS_FILE,
             scopes=None,
-            redirect_uri='a-qa-frontend-happy-walker.herokuapp.com/oauth2callback')
+            redirect_uri=settings.REDIRECT_URI)
 
-        authorization_response = request.build_absolute_uri()
         try:
-            flow.fetch_token(authorization_response=authorization_response)
+            flow.fetch_token(code=data['code'])
         except MissingCodeError:
-            return HttpResponse('error')
+            return JsonResponse({'message': 'Bad request'}, status=400)
 
         credentials = flow.credentials
 
-        # if request.user.is_authenticated:
-        #     OAuthData.objects.update_or_create(user_id=request.user.id,
-        #                                        defaults={'user_id': request.user.id, 'token': credentials.token,
-        #                                                  'refresh_token': credentials.refresh_token,
-        #                                                  'token_uri': credentials.token_uri,
-        #                                                  'client_id': credentials.client_id,
-        #                                                  'client_secret': credentials.client_secret,
-        #                                                  'scopes': credentials.scopes
-        #                                                  })
-        #
-        # else:
-        #     profile = googleapiclient.discovery.build(
-        #         'plus', 'v1', credentials=credentials)
-        #     profile = profile.people().get(userId='me').execute()
-        #     email = profile['emails'][0]['value']
-        #
-        #     if User.objects.filter(email=email).exists():
-        #         user = User.objects.get(email=email)
-        #         login(request, user)
-        #     else:
-        #         first_name = profile['name']['givenName']
-        #         last_name = profile['name']['familyName']
-        #         nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
-        #         password = ''.join(choice(ascii_uppercase) for i in range(12))
-        #         user = User.objects.create_user(username=nickname, email=email, password=password,
-        #                                         first_name=first_name, last_name=last_name, is_active=True)
-        #         OAuthData.objects.create(user_id=user.id, token=credentials.token,
-        #                                  refresh_token=credentials.refresh_token, token_uri=credentials.token_uri,
-        #                                  client_id=credentials.client_id, client_secret=credentials.client_secret,
-        #                                  scopes=credentials.scopes)
-        #
-        #         login(request, user)
+        google_user = googleapiclient.discovery.build(
+            'plus', 'v1', credentials=credentials)
+        google_user = google_user.people().get(userId='me').execute()
+        email = google_user['emails'][0]['value']
+
+        if User.objects.filter(email=email).exists():
+            user = User.objects.get(email=email)
+            profile = Profile.objects.get(user_id=user.id)
+
+            if not profile.refresh_token:
+                profile.refresh_token = credentials.refresh_token
+                profile.access_token = credentials.token
+                profile.save()
+            else:
+                login(request, user)
+                return JsonResponse({
+                    "message": "login success",
+                }, status=200)
+        else:
+
+            first_name = google_user['name']['givenName']
+            last_name = google_user['name']['familyName']
+            nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
+            password = ''.join(choice(ascii_uppercase) for i in range(12))
+            user = User.objects.create_user(username=nickname, email=email, password=password,
+                                            first_name=first_name, last_name=last_name, is_active=True)
+            Profile.objects.filter(user_id=user.id).update(access_token=credentials.token,
+                                                           refresh_token=credentials.refresh_token)
+
+        login(request, user)
 
         return JsonResponse({
-            "message": credentials,
+            "message": "login success",
         }, status=200)
 
 
 class TestView(View):
     def get(self, request):
-        if not OAuthData.objects.filter(user_id=request.user.id):
-            return redirect('oauth')
+        # if not OAuthData.objects.filter(user_id=request.user.id):
+        #     return redirect('oauth')
 
-        credentials = OAuthData.objects.get(user_id=request.user.id)
-        credentials = google.oauth2.credentials.Credentials(**credentials_to_dict(credentials))
+        # credentials = OAuthData.objects.get(user_id=request.user.id)
+        # credentials = google.oauth2.credentials.Credentials(**credentials_to_dict(credentials))
+        credentials = google.oauth2.credentials.Credentials(None,
+                                                            client_id='273646785748-1iii0vgckdfr7cer7gu2had4dln55qvm.apps.googleusercontent.com',
+                                                            client_secret='k40UuBJGSq2dnqkh_l3SyS2P',
+                                                            refresh_token='1/tGfb1h0_SUDUWP1WR75Gmcxk-YoG0u66nBUtXZm-De4',
+                                                            token_uri='https://accounts.google.com/o/oauth2/token')
+
+        # profile = googleapiclient.discovery.build(
+        #         'plus', 'v1', credentials=credentials)
+        # profile = profile.people().get(userId='me').execute()
 
         fit = googleapiclient.discovery.build(
             'fitness', 'v1', credentials=credentials)
