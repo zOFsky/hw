@@ -1,15 +1,19 @@
 import time, datetime
 from django.contrib.auth.models import User
-from users.models import Profile
+from django.conf import settings
+from users.models import Profile, Location
 from django.http import HttpResponse, HttpRequest, JsonResponse
-from django.shortcuts import redirect
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.template.loader import get_template
 from django.views.generic import View
 from django.contrib.auth import authenticate, login, logout
+<<<<<<< HEAD
 from django.db.models import Q, Avg, Sum
+=======
+from django.db.models import Q
+from oauthlib.oauth2.rfc6749.errors import MissingCodeError
+>>>>>>> 002993fb0a7ac807f6b305035e08c345aa521e89
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.mixins import LoginRequiredMixin
 from google_auth_oauthlib.flow import Flow
 import google.oauth2.credentials
 import googleapiclient.discovery
@@ -17,7 +21,14 @@ import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
 from .email_sender import EmailSender
+<<<<<<< HEAD
 #from . import epochtime
+=======
+import time
+import calendar
+from random import choice
+from string import ascii_uppercase
+>>>>>>> 002993fb0a7ac807f6b305035e08c345aa521e89
 
 
 class UserRegisterView(View):
@@ -35,7 +46,7 @@ class UserRegisterView(View):
             'regex': '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
             'empty': False
             },
-        'username':{
+        'username': {
             'required': True,
             'type': 'string',
             'regex': '^[\w]+$',
@@ -43,7 +54,7 @@ class UserRegisterView(View):
             'maxlength': 30,
             'empty': False,
         },
-        'first_name':{
+        'first_name': {
             'required': True,
             'type': 'string',
             'minlength': 2,
@@ -52,7 +63,7 @@ class UserRegisterView(View):
             'empty': False,
         },
         
-        'last_name':{
+        'last_name': {
             'required': True,
             'type': 'string',
             'minlength': 2,
@@ -64,23 +75,22 @@ class UserRegisterView(View):
     }
     
     def post(self, request):
-        #input validation 
-        #if data does not pass validation we send response with errors
+        # input validation
+        # if data does not pass validation we send response with errors
         validator = CustomValidator(self.validation_schema)
         if validator.request_validation(request):
             errors_dict = validator.request_validation(request)
-            return JsonResponse(errors_dict, status = 400)
+            return JsonResponse(errors_dict, status=400)
         else:
             data = json.loads(request.body)
-        #check if username or email already exists in our database
+        # check if username or email already exists in our database
         if not(User.objects.filter(
              Q(username=data['username']) |
              Q(email=data['email'])
              ).exists()):
-            #if user doesn't exist we create him with data
-            User.objects.create_user(username=data['username'], email=data['email'],
-                password=data['password'], first_name=data['first_name'],
-                last_name=data['last_name'], is_active=False)
+            # if user doesn't exist we create him with data
+            User.objects.create_user(username=data['username'], email=data['email'], password=data['password'],
+                                     first_name=data['first_name'], last_name=data['last_name'], is_active=False)
 
             # send email
             user = User.objects.get(username=data['username'])
@@ -98,13 +108,13 @@ class UserRegisterView(View):
 
             return JsonResponse({
                 "uid": user.id,
-                "message" : "user successfully created",
+                "message": "user successfully created",
                 }, status=201)
         # in case username or email already exists in database we return that message
         else:
             return JsonResponse({
-                "errors":[{"message" : "user with that credentials already exists",
-                "code": "registration.user_exists"}]
+                "errors": [{"message": "user with that credentials already exists",
+                            "code": "registration.user_exists"}]
                 }, status=460)
 
 
@@ -148,7 +158,6 @@ class ConfirmEmailView(View):
             User.objects.filter(id=uid).update(is_active='True')
             login(request, user)
             return JsonResponse({
-                "id": uid,
                 "message": "user successfully activated"
             }, status=200)
         else:
@@ -228,35 +237,40 @@ class UserLoginView(View):
     }
 
     def post(self, request):
-        #data validation
+        # data validation
         validator = CustomValidator(self.validation_schema)
         if validator.request_validation(request):
             errors_dict = validator.request_validation(request)
-            return JsonResponse(errors_dict, status = 400)
+            return JsonResponse(errors_dict, status=400)
         else:
             data = json.loads(request.body)
-        #try to find user in our database
+        # try to find user in our database
         try:
             existing_user = User.objects.filter(Q(username=data['username_or_email']) |
-                                          Q(email=data['username_or_email'])).get()
-        #return response with error if we couldn't find user with entered data
-        except:
+                                                Q(email=data['username_or_email'])).get()
+        # return response with error if we couldn't find user with entered data
+        except ObjectDoesNotExist:
             return JsonResponse({
-                "errors":[{"message" : "user does not exist in our database",
-                "code": "login.user_does_not_exists"}]
+                "errors": [{"message": "user does not exist in our database",
+                            "code": "login.user_does_not_exists"}]
                 }, status=432)
-        #checking if user is active
-        #at this point user is always active, but it will be changed in further development 
-        if existing_user and existing_user.is_active==False:
+        # checking if user is active
+        # at this point user is always active, but it will be changed in further development
+        if not existing_user and not existing_user.is_active:
             return JsonResponse({
-                "errors":[{"message" : "user is not active",
-                "code": "login.user_is_not_active"}]
+                "errors": [{"message": "user is not active",
+                            "code": "login.user_is_not_active"}]
                 }, status=455)
-        #if user is active we authenticate him and log him in   
+        # if user is active we authenticate him and log him in
         elif existing_user:
             user = authenticate(username=existing_user.username, 
-                                             password=data['password'])
+                                password=data['password'])
             if user is not None:
+
+                profile = Profile.objects.get(user_id=existing_user.id)
+                if not profile.refresh_token:
+                    return JsonResponse({"message": "user did not give access"}, status=423)
+
                 login(request, user)
                 if not request.session.exists(request.session.session_key):
                     request.session.create() 
@@ -264,15 +278,15 @@ class UserLoginView(View):
                     "message": "login successfull",
                     "token": request.session.session_key
                     }, status=230)
-            #if user didn't pass authentication we send message
+            # if user didn't pass authentication we send message
             else:
                 return JsonResponse({
-                "errors":[{"message" : "password incorrect",
-                "code": "login.incorrect_password"}]
+                    "errors": [{"message": "password incorrect",
+                                "code": "login.incorrect_password"}]
                 }, status=467)
 
 
-class ProfileView(LoginRequiredMixin, View):
+class ProfileView(View):
 
     validation_schema = {
         'email': {
@@ -289,6 +303,25 @@ class ProfileView(LoginRequiredMixin, View):
             'required': True,
             'type': 'string',
             'empty': False,
+        },
+        'location': {
+            'required': True,
+            'empty': True,
+            'type': 'dict',
+            'schema': {
+                'city': {
+                    'type': 'string',
+                    'empty': False
+                },
+                'lat': {
+                    'type': 'number',
+                    'empty': False
+                },
+                'lng': {
+                    'type': 'number',
+                    'empty': False
+                }
+            }
         }
     }
 
@@ -307,14 +340,24 @@ class ProfileView(LoginRequiredMixin, View):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'image': "{}{}".format(request.get_host(), user.profile.image.url)
+            'google_image': user.profile.google_image,
+            'favorites': user.profile.favorites,
+            'location': {
+                'city': user.profile.location.city,
+                'lat': user.profile.location.lat,
+                'lng': user.profile.location.lng
+            }
         }
+
+        if user.profile.image.name:
+            profile['image'] = "{}{}{}".format('https://', request.get_host(), user.profile.image.url)
+        else:
+            profile['image'] = None
 
         if user_id == str(request.user.id) or user_id == 'me':
             profile['email'] = user.email
 
         return JsonResponse(profile, status=200)
-
 
     def post(self, request, user_id):
         if user_id != 'me':
@@ -331,10 +374,20 @@ class ProfileView(LoginRequiredMixin, View):
         else:
             data = json.loads(request.body)
             user = User.objects.get(id=request.user.id)
+            profile = Profile.objects.get(user_id=request.user.id)
 
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
+
             user.save()
+
+            if data['location']:
+                profile.location = Location(lat=data['location']['lat'], lng=data['location']['lng'],
+                                            city=data['location']['city'])
+                profile.save()
+            else:
+                profile.location = Location()
+                profile.save()
 
             if data["email"] != user.email:
                 # sending confirmation letter to new email
@@ -359,6 +412,25 @@ class ProfileView(LoginRequiredMixin, View):
             }, status=201)
 
 
+class FavoritesView(View):
+
+    def get(self, request, favorite_id):
+        profile = Profile.objects.get(user_id=request.user.id)
+        favorite_id = int(favorite_id)
+
+        if favorite_id in profile.favorites:
+            profile.favorites.remove(favorite_id)
+        else:
+            profile.favorites.append(favorite_id)
+
+        profile.save()
+
+        return JsonResponse({
+            "message": "Success",
+            "favorites": profile.favorites
+        }, status=200)
+
+
 class UploadPhotoView(View):
 
     def post(self, request):
@@ -366,7 +438,7 @@ class UploadPhotoView(View):
             if request.FILES['image'].size < 5242880:
 
                 profile = Profile.objects.get(user_id=request.user.id)
-                if profile.image.url != "/media/images/avatar.png":
+                if profile.image.name:
                     profile.image.delete()
                 profile.image = request.FILES['image']
                 profile.save()
@@ -416,30 +488,23 @@ class ChangePasswordView(View):
             'empty': False
             },
         }
+
     def post(self, request):
         validator = CustomValidator(self.validation_schema)
         if validator.request_validation(request):
             errors_dict = validator.request_validation(request)
-            return JsonResponse(errors_dict, status = 400)
+            return JsonResponse(errors_dict, status=400)
         data = json.loads(request.body)
         current_user = request.user
         if not current_user.check_password(data['old_password']):
-            return JsonResponse({
-                "message": "password is incorrect",
-            },
-            status=401
-            )
+            return JsonResponse({"message": "password is incorrect"}, status=401)
         else:
             if data['new_password'] == data['repeat_password']:
                 current_user.set_password(data['new_password'])
                 current_user.save()
-                return JsonResponse({
-                "message": "password successfully updated"
-            }, status=201)
+                return JsonResponse({"message": "password successfully updated"}, status=201)
             else:
-                return JsonResponse({
-                    "message":"passwords doesn't match"
-                }, status=444)
+                return JsonResponse({"message": "passwords doesn't match"}, status=444)
 
 
 class ForgotPasswordView(View):
@@ -456,7 +521,7 @@ class ForgotPasswordView(View):
         validator = CustomValidator(self.validation_schema)
         if validator.request_validation(request):
             errors_dict = validator.request_validation(request)
-            return JsonResponse(errors_dict, status = 400)
+            return JsonResponse(errors_dict, status=400)
         data = json.loads(request.body)
         try:
             user = User.objects.get(email=data['email'])
@@ -476,11 +541,11 @@ class ForgotPasswordView(View):
             text_email = get_template('reset_password')
             confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
             return JsonResponse({
-                'message':'Check your email to change your password'
+                'message': 'Check your email to change your password'
             }, status=202)
         else:
             return JsonResponse({
-                'message':'Check your email to change your password'
+                'message': 'Check your email to change your password'
             }, status=200)
 
 
@@ -547,71 +612,108 @@ class ResetPasswordView(View):
 
 
 class OAuth(View):
-    def get(self, request):
-        # Create the flow using the client secrets file from the Google API
-        # Console.
-        flow = Flow.from_client_secrets_file(
-            'users/client_secret.json',
-            scopes=['https://www.googleapis.com/auth/userinfo.profile',
-                    'https://www.googleapis.com/auth/fitness.activity.read',
-                    'https://www.googleapis.com/auth/fitness.location.read'],
-            redirect_uri='http://localhost:8000/oauth2callback')
 
-        # Tell the user to go to the authorization URL.
-        authorization_url, state = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='true'
-        )
+    validation_schema = {
+        'code': {
+            'required': True,
+            'type': 'string',
+            'empty': False
+        }
+    }
 
-        return redirect(authorization_url)
+    def post(self, request):
 
-
-class Oauth2Callback(View):
-    def get(self, request):
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status=400)
+        else:
+            data = json.loads(request.body)
 
         flow = Flow.from_client_secrets_file(
-            'users/client_secret.json',
-            scopes=['https://www.googleapis.com/auth/userinfo.profile',
-                    'https://www.googleapis.com/auth/fitness.activity.read',
-                    'https://www.googleapis.com/auth/fitness.location.read'],
-            redirect_uri='http://localhost:8000/oauth2callback')
+            settings.CLIENT_SECRETS_FILE,
+            scopes=None,
+            redirect_uri=settings.REDIRECT_URI)
 
-        authorization_response = request.build_absolute_uri()
-        flow.fetch_token(authorization_response=authorization_response)
+        try:
+            flow.fetch_token(code=data['code'])
+        except:
+            return JsonResponse({'message': 'Bad request'}, status=400)
+
         credentials = flow.credentials
-        request.session['credentials'] = credentials_to_dict(credentials)
 
-        return HttpResponse('success')
+        google_user = googleapiclient.discovery.build(
+            'plus', 'v1', credentials=credentials)
+        google_user = google_user.people().get(userId='me').execute()
+        email = google_user['emails'][0]['value']
+
+        if User.objects.filter(email=email).exists():
+            user = User.objects.get(email=email)
+            profile = Profile.objects.get(user_id=user.id)
+
+            if not profile.refresh_token:
+                profile.refresh_token = credentials.refresh_token
+                profile.access_token = credentials.token
+                profile.save()
+            else:
+                login(request, user)
+                return JsonResponse({
+                    "message": "login success",
+                }, status=200)
+        else:
+
+            first_name = google_user['name']['givenName']
+            last_name = google_user['name']['familyName']
+            image = google_user['image']['url']
+            nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
+            password = ''.join(choice(ascii_uppercase) for i in range(12))
+            user = User.objects.create_user(username=nickname, email=email, password=password, first_name=first_name,
+                                            last_name=last_name, is_active=True)
+            Profile.objects.filter(user_id=user.id).update(access_token=credentials.token,
+                                                           refresh_token=credentials.refresh_token,
+                                                           google_image=image)
+
+        login(request, user)
+
+        return JsonResponse({
+            "message": "login success",
+        }, status=200)
 
 
 class TestView(View):
     def get(self, request):
-        if 'credentials' not in request.session:
-            return redirect('/oauth')
+        # if not OAuthData.objects.filter(user_id=request.user.id):
+        #     return redirect('oauth')
 
-        credentials = request.session['credentials']
+        # credentials = OAuthData.objects.get(user_id=request.user.id)
+        # credentials = google.oauth2.credentials.Credentials(**credentials_to_dict(credentials))
+        credentials = google.oauth2.credentials.Credentials(None,
+                                                            client_id='273646785748-1iii0vgckdfr7cer7gu2had4dln55qvm.apps.googleusercontent.com',
+                                                            client_secret='k40UuBJGSq2dnqkh_l3SyS2P',
+                                                            refresh_token='1/cQVphOnfhGM7e2ajQzgR5NSMRIfhiAQf5ZvCNsGiW4g',
+                                                            token_uri='https://accounts.google.com/o/oauth2/token')
 
-        credentials = google.oauth2.credentials.Credentials(
-            token=credentials['token'],
-            refresh_token=credentials['refresh_token'],
-            token_uri=credentials['token_uri'],
-            client_id=credentials['client_id'],
-            client_secret=credentials['client_secret'],
-            scopes=credentials['scopes'])
+        profile = googleapiclient.discovery.build(
+                'plus', 'v1', credentials=credentials)
+        profile = profile.people().get(userId='me').execute()
 
-        fit = googleapiclient.discovery.build(
-            'fitness', 'v1', credentials=credentials)
+        # fit = googleapiclient.discovery.build(
+        #     'fitness', 'v1', credentials=credentials)
 
-        files = fit.users().dataSources().datasets().get(
-            dataSourceId='derived:com.google.step_count.delta:com.google.android.gms:estimated_steps',
-            userId='me', datasetId='1400000000000000000-1537971207000000000').execute()
+        # files = fit.users().dataSources().datasets().get(
+        #     dataSourceId='raw:com.google.calories.expended:com.google.android.apps.fitness:user_input',
+        #     userId='me', datasetId='1400000000000000000-1537971207000000000').execute()
 
         # files = fit.users().dataSources().list(
         #     userId='me').execute()
 
+<<<<<<< HEAD
 
        #return JsonResponse(credentials_to_dict(credentials))
         return JsonResponse(files)
+=======
+        return JsonResponse(profile)
+>>>>>>> 002993fb0a7ac807f6b305035e08c345aa521e89
 
 
 def credentials_to_dict(credentials):
@@ -620,4 +722,38 @@ def credentials_to_dict(credentials):
             'token_uri': credentials.token_uri,
             'client_id': credentials.client_id,
             'client_secret': credentials.client_secret,
+<<<<<<< HEAD
             'scopes': credentials.scopes}
+=======
+            'scopes': credentials.scopes}
+
+
+class TopWalkersView(View):
+
+    def get(self, request):
+
+        user = User.objects.get(id=request.user.id)
+
+        if user.profile.location.city == '':
+            return JsonResponse({'top_walkers': []}, status=200)
+
+        lat = user.profile.location.lat
+        lng = user.profile.location.lng
+
+        top_walkers = []
+        data = Profile.objects.filter(location={'lat': lat, 'lng': lng}).exclude(user_id=request.user.id)
+        data = data[::1]
+        for walker in data:
+            dict = {}
+            if walker.image.name:
+                dict['image'] = "{}{}{}".format('https://', request.get_host(), walker.image.url)
+            else:
+                dict['image'] = None
+            dict['google_image'] = walker.google_image
+            dict['id'] = walker.user_id
+            dict['first_name'] = walker.user.first_name
+            dict['last_name'] = walker.user.last_name
+            top_walkers.append(dict)
+
+        return JsonResponse({'top_walkers': top_walkers}, status=200)
+>>>>>>> 002993fb0a7ac807f6b305035e08c345aa521e89
