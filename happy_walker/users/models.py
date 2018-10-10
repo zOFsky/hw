@@ -15,7 +15,8 @@ class Location(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='images/photos', default='images/avatar.png')
+    image = models.ImageField(upload_to='images/photos', null=True)
+    google_image = models.CharField(max_length=255, null=True)
     favorites = models.ListField(default=[])
     location = models.EmbeddedModelField(
         model_container=Location,
