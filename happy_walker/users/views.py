@@ -331,7 +331,8 @@ class ProfileView(View):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'image': "{}{}".format(request.get_host(), user.profile.image.url),
+            'image': "{}{}{}".format('https://', request.get_host(), user.profile.image.url),
+            'google_image': user.profile.google_image,
             'favorites': user.profile.favorites,
             'location': {
                 'city': user.profile.location.city,
@@ -657,7 +658,7 @@ class OAuth(View):
                                             last_name=last_name, is_active=True)
             Profile.objects.filter(user_id=user.id).update(access_token=credentials.token,
                                                            refresh_token=credentials.refresh_token,
-                                                           image=image)
+                                                           google_image=image)
 
         login(request, user)
 
