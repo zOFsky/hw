@@ -628,7 +628,7 @@ class OAuth(View):
 
         try:
             flow.fetch_token(code=data['code'])
-        except MissingCodeError:
+        except:
             return JsonResponse({'message': 'Bad request'}, status=400)
 
         credentials = flow.credentials
