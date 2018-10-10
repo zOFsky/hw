@@ -7,12 +7,8 @@ from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.template.loader import get_template
 from django.views.generic import View
 from django.contrib.auth import authenticate, login, logout
-<<<<<<< HEAD
 from django.db.models import Q, Avg, Sum
-=======
-from django.db.models import Q
 from oauthlib.oauth2.rfc6749.errors import MissingCodeError
->>>>>>> 002993fb0a7ac807f6b305035e08c345aa521e89
 from django.core.exceptions import ObjectDoesNotExist
 from google_auth_oauthlib.flow import Flow
 import google.oauth2.credentials
@@ -21,14 +17,11 @@ import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
 from .email_sender import EmailSender
-<<<<<<< HEAD
 #from . import epochtime
-=======
 import time
 import calendar
 from random import choice
 from string import ascii_uppercase
->>>>>>> 002993fb0a7ac807f6b305035e08c345aa521e89
 
 
 class UserRegisterView(View):
@@ -685,12 +678,14 @@ class TestView(View):
         # if not OAuthData.objects.filter(user_id=request.user.id):
         #     return redirect('oauth')
 
+        profile = Profile.objects.get(user_id=request.user.id)
+
         # credentials = OAuthData.objects.get(user_id=request.user.id)
         # credentials = google.oauth2.credentials.Credentials(**credentials_to_dict(credentials))
         credentials = google.oauth2.credentials.Credentials(None,
                                                             client_id='273646785748-1iii0vgckdfr7cer7gu2had4dln55qvm.apps.googleusercontent.com',
                                                             client_secret='k40UuBJGSq2dnqkh_l3SyS2P',
-                                                            refresh_token='1/cQVphOnfhGM7e2ajQzgR5NSMRIfhiAQf5ZvCNsGiW4g',
+                                                            refresh_token=profile.refresh_token,
                                                             token_uri='https://accounts.google.com/o/oauth2/token')
 
         profile = googleapiclient.discovery.build(
@@ -704,16 +699,10 @@ class TestView(View):
         #     dataSourceId='raw:com.google.calories.expended:com.google.android.apps.fitness:user_input',
         #     userId='me', datasetId='1400000000000000000-1537971207000000000').execute()
 
-        # files = fit.users().dataSources().list(
+        # files = fit.users1/29doQ0axe3keJubTsWb4Aig3Se6fY2ius50dhBemZdo1/29doQ0axe3keJubTsWb4Aig3Se6fY2ius50dhBemZdo().dataSources().list(
         #     userId='me').execute()
 
-<<<<<<< HEAD
-
-       #return JsonResponse(credentials_to_dict(credentials))
-        return JsonResponse(files)
-=======
         return JsonResponse(profile)
->>>>>>> 002993fb0a7ac807f6b305035e08c345aa521e89
 
 
 def credentials_to_dict(credentials):
@@ -722,9 +711,6 @@ def credentials_to_dict(credentials):
             'token_uri': credentials.token_uri,
             'client_id': credentials.client_id,
             'client_secret': credentials.client_secret,
-<<<<<<< HEAD
-            'scopes': credentials.scopes}
-=======
             'scopes': credentials.scopes}
 
 
@@ -756,4 +742,3 @@ class TopWalkersView(View):
             top_walkers.append(dict)
 
         return JsonResponse({'top_walkers': top_walkers}, status=200)
->>>>>>> 002993fb0a7ac807f6b305035e08c345aa521e89
