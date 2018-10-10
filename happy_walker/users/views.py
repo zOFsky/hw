@@ -331,7 +331,6 @@ class ProfileView(View):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'image': "{}{}{}".format('https://', request.get_host(), user.profile.image.url),
             'google_image': user.profile.google_image,
             'favorites': user.profile.favorites,
             'location': {
@@ -340,6 +339,11 @@ class ProfileView(View):
                 'lng': user.profile.location.lng
             }
         }
+
+        if user.profile.image.name:
+            profile['image'] = "{}{}{}".format('https://', request.get_host(), user.profile.image.url)
+        else:
+            profile['image'] = None
 
         if user_id == str(request.user.id) or user_id == 'me':
             profile['email'] = user.email
