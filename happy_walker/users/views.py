@@ -727,7 +727,7 @@ class TopWalkersView(View):
         data = data[::1]
         for walker in data:
             dict = {}
-            if user.profile.image.name:
+            if walker.user.profile.image.name:
                 dict['image'] = "{}{}{}".format('https://', request.get_host(), walker.user.profile.image.url)
             else:
                 dict['image'] = None
