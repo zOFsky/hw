@@ -650,12 +650,14 @@ class OAuth(View):
 
             first_name = google_user['name']['givenName']
             last_name = google_user['name']['familyName']
+            image = google_user['image']['url']
             nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
             password = ''.join(choice(ascii_uppercase) for i in range(12))
-            user = User.objects.create_user(username=nickname, email=email, password=password,
-                                            first_name=first_name, last_name=last_name, is_active=True)
+            user = User.objects.create_user(username=nickname, email=email, password=password, first_name=first_name,
+                                            last_name=last_name, is_active=True)
             Profile.objects.filter(user_id=user.id).update(access_token=credentials.token,
-                                                           refresh_token=credentials.refresh_token)
+                                                           refresh_token=credentials.refresh_token,
+                                                           image=image)
 
         login(request, user)
 
@@ -674,24 +676,24 @@ class TestView(View):
         credentials = google.oauth2.credentials.Credentials(None,
                                                             client_id='273646785748-1iii0vgckdfr7cer7gu2had4dln55qvm.apps.googleusercontent.com',
                                                             client_secret='k40UuBJGSq2dnqkh_l3SyS2P',
-                                                            refresh_token='1/tGfb1h0_SUDUWP1WR75Gmcxk-YoG0u66nBUtXZm-De4',
+                                                            refresh_token='1/cQVphOnfhGM7e2ajQzgR5NSMRIfhiAQf5ZvCNsGiW4g',
                                                             token_uri='https://accounts.google.com/o/oauth2/token')
 
-        # profile = googleapiclient.discovery.build(
-        #         'plus', 'v1', credentials=credentials)
-        # profile = profile.people().get(userId='me').execute()
+        profile = googleapiclient.discovery.build(
+                'plus', 'v1', credentials=credentials)
+        profile = profile.people().get(userId='me').execute()
 
-        fit = googleapiclient.discovery.build(
-            'fitness', 'v1', credentials=credentials)
+        # fit = googleapiclient.discovery.build(
+        #     'fitness', 'v1', credentials=credentials)
 
         # files = fit.users().dataSources().datasets().get(
         #     dataSourceId='raw:com.google.calories.expended:com.google.android.apps.fitness:user_input',
         #     userId='me', datasetId='1400000000000000000-1537971207000000000').execute()
 
-        files = fit.users().dataSources().list(
-            userId='me').execute()
+        # files = fit.users().dataSources().list(
+        #     userId='me').execute()
 
-        return JsonResponse(files)
+        return JsonResponse(profile)
 
 
 def credentials_to_dict(credentials):
