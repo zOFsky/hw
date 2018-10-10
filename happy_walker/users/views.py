@@ -727,11 +727,11 @@ class TopWalkersView(View):
         data = data[::1]
         for walker in data:
             dict = {}
-            if walker.user.profile.image.name:
-                dict['image'] = "{}{}{}".format('https://', request.get_host(), walker.user.profile.image.url)
+            if walker.image.name:
+                dict['image'] = "{}{}{}".format('https://', request.get_host(), walker.image.url)
             else:
                 dict['image'] = None
-            dict['google_image'] = walker.user.profile.google_image
+            dict['google_image'] = walker.google_image
             dict['id'] = walker.user_id
             dict['first_name'] = walker.user.first_name
             dict['last_name'] = walker.user.last_name
