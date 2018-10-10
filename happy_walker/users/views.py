@@ -429,7 +429,7 @@ class UploadPhotoView(View):
             if request.FILES['image'].size < 5242880:
 
                 profile = Profile.objects.get(user_id=request.user.id)
-                if profile.image.url != "/media/images/avatar.png":
+                if profile.image.name:
                     profile.image.delete()
                 profile.image = request.FILES['image']
                 profile.save()
