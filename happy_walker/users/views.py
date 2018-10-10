@@ -429,7 +429,7 @@ class UploadPhotoView(View):
             if request.FILES['image'].size < 5242880:
 
                 profile = Profile.objects.get(user_id=request.user.id)
-                if profile.image.url != "/media/images/avatar.png":
+                if profile.image.name:
                     profile.image.delete()
                 profile.image = request.FILES['image']
                 profile.save()
@@ -727,7 +727,11 @@ class TopWalkersView(View):
         data = data[::1]
         for walker in data:
             dict = {}
-            dict['image'] = "{}{}".format(request.get_host(), walker.user.profile.image.url),
+            if user.profile.image.name:
+                dict['image'] = "{}{}{}".format('https://', request.get_host(), walker.user.profile.image.url)
+            else:
+                dict['image'] = None
+            dict['google_image'] = walker.user.profile.google_image,
             dict['id'] = walker.user_id
             dict['first_name'] = walker.user.first_name
             dict['last_name'] = walker.user.last_name
