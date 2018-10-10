@@ -105,14 +105,6 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
-SCOPES = [
-    'profile',
-    'email',
-    'https://www.googleapis.com/auth/fitness.activity.read',
-    'https://www.googleapis.com/auth/fitness.location.read'
-    ]
-
-
 CLIENT_SECRETS_FILE = 'users/client_secret.json'
 API_SERVICE_NAME = 'fitness'
 API_VERSION = 'v1'
