@@ -354,7 +354,6 @@ class ProfileView(View):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'google_image': user.profile.google_image,
             'favorites': user.profile.favorites,
             'location': {
                 'city': user.profile.location.city,
@@ -363,10 +362,10 @@ class ProfileView(View):
             }
         }
 
-        if user.profile.image.name:
-            profile['image'] = "{}{}{}".format('https://', request.get_host(), user.profile.image.url)
+        if user.profile.image.url:
+            profile['image'] = user.profile.image.url
         else:
-            profile['image'] = None
+            profile['image'] = user.profile.google_image
 
         if user_id == str(request.user.id) or user_id == 'me':
             profile['email'] = user.email
@@ -449,7 +448,7 @@ class UploadPhotoView(View):
 
     def post(self, request):
         if 'image' in request.FILES:
-            if request.FILES['image'].size < 500:
+            if request.FILES['image'].size < 5242880:
 
                 profile = Profile.objects.get(user_id=request.user.id)
                 old_image = profile.image.public_id
@@ -462,7 +461,7 @@ class UploadPhotoView(View):
                 }, status=200)
             else:
                 return JsonResponse({
-                    "message": "File too large. Size should not exceed 500 KB",
+                    "message": "File too large. Size should not exceed 5 MB",
                     "code": "size"
                 }, status=400)
         else:
@@ -711,11 +710,10 @@ class TopWalkersView(View):
         data = data[::1]
         for walker in data:
             dict = {}
-            if walker.image.name:
-                dict['image'] = "{}{}{}".format('https://', request.get_host(), walker.image.url)
+            if walker.image.url:
+                dict['image'] = walker.image.url
             else:
-                dict['image'] = None
-            dict['google_image'] = walker.google_image
+                dict['image'] = walker.google_image
             dict['id'] = walker.user_id
             dict['first_name'] = walker.user.first_name
             dict['last_name'] = walker.user.last_name
