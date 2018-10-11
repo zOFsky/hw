@@ -452,7 +452,8 @@ class UploadPhotoView(View):
 
                 profile = Profile.objects.get(user_id=request.user.id)
                 old_image = profile.image.public_id
-                cloudinary.uploader.destroy(old_image)
+                if old_image:
+                    cloudinary.uploader.destroy(old_image)
                 profile.image = request.FILES['image']
                 profile.save()
 

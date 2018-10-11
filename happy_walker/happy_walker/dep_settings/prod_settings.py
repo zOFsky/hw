@@ -1,11 +1,11 @@
 import os
+import cloudinary
 
 DEBUG = False
 
 SECRET_KEY = os.environ['SECRET_KEY']
 REDIRECT_URI = os.environ['REDIRECT_URI']
 DOMEN = os.environ['DOMEN']
-CLOUDINARY_URL=os.environ['CLOUDINARY_URL']
 
 ALLOWED_HOSTS = ['a-qa-backend-happy-walker.herokuapp.com', 'a-prod-backend-happy-walker.herokuapp.com']
 
