@@ -105,6 +105,8 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
+DOMEN = 'localhost'
+
 CLIENT_SECRETS_FILE = 'users/client_secret.json'
 API_SERVICE_NAME = 'fitness'
 API_VERSION = 'v1'

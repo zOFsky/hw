@@ -7,10 +7,8 @@ from django.template.loader import get_template
 from django.views.generic import View
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
-from oauthlib.oauth2.rfc6749.errors import MissingCodeError
 from django.core.exceptions import ObjectDoesNotExist
 from google_auth_oauthlib.flow import Flow
-import google.oauth2.credentials
 import googleapiclient.discovery
 import json
 from .custom_validator import CustomValidator
@@ -159,6 +157,30 @@ class ConfirmEmailView(View):
                     "field": "token"
                 }]
             }, status=400)
+
+
+class ResendEmailView(View):
+
+    def get(self, request, user_id):
+
+        user = User.objects.get(id=user_id)
+
+        token_generator = TokenGenerator()
+        confirmation_email = EmailSender()
+        context = {
+            'uid': user.id,
+            'token': token_generator.make_token(user),
+        }
+        email = user.email
+        mail_subject = 'Activate your HappyWalker account'
+        html_email = get_template('acc_active_email.html')
+        text_email = get_template('acc_active_email')
+        confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
+
+        return JsonResponse({
+            "uid": user.id,
+            "message": "Success",
+        }, status=201)
 
 
 class ChangeEmailView(View):
@@ -602,7 +624,7 @@ class ResetPasswordView(View):
                 }, status=444)
 
 
-class OAuth(View):
+class OAuthView(View):
 
     validation_schema = {
         'code': {
@@ -658,8 +680,8 @@ class OAuth(View):
             image = google_user['image']['url']
             nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
             password = ''.join(choice(ascii_uppercase) for i in range(12))
-            user = User.objects.create_user(username=nickname, email=email, password=password, first_name=first_name,
-                                            last_name=last_name, is_active=True)
+            user = User.objects.create_user(username=nickname, email=email, password=password,
+                                            first_name=first_name, last_name=last_name, is_active=True)
             Profile.objects.filter(user_id=user.id).update(access_token=credentials.token,
                                                            refresh_token=credentials.refresh_token,
                                                            google_image=image)
@@ -669,45 +691,6 @@ class OAuth(View):
         return JsonResponse({
             "message": "login success",
         }, status=200)
-
-
-class TestView(View):
-    def get(self, request):
-        # if not OAuthData.objects.filter(user_id=request.user.id):
-        #     return redirect('oauth')
-
-        # credentials = OAuthData.objects.get(user_id=request.user.id)
-        # credentials = google.oauth2.credentials.Credentials(**credentials_to_dict(credentials))
-        credentials = google.oauth2.credentials.Credentials(None,
-                                                            client_id='273646785748-1iii0vgckdfr7cer7gu2had4dln55qvm.apps.googleusercontent.com',
-                                                            client_secret='k40UuBJGSq2dnqkh_l3SyS2P',
-                                                            refresh_token='1/cQVphOnfhGM7e2ajQzgR5NSMRIfhiAQf5ZvCNsGiW4g',
-                                                            token_uri='https://accounts.google.com/o/oauth2/token')
-
-        profile = googleapiclient.discovery.build(
-                'plus', 'v1', credentials=credentials)
-        profile = profile.people().get(userId='me').execute()
-
-        # fit = googleapiclient.discovery.build(
-        #     'fitness', 'v1', credentials=credentials)
-
-        # files = fit.users().dataSources().datasets().get(
-        #     dataSourceId='raw:com.google.calories.expended:com.google.android.apps.fitness:user_input',
-        #     userId='me', datasetId='1400000000000000000-1537971207000000000').execute()
-
-        # files = fit.users().dataSources().list(
-        #     userId='me').execute()
-
-        return JsonResponse(profile)
-
-
-def credentials_to_dict(credentials):
-    return {'token': credentials.token,
-            'refresh_token': credentials.refresh_token,
-            'token_uri': credentials.token_uri,
-            'client_id': credentials.client_id,
-            'client_secret': credentials.client_secret,
-            'scopes': credentials.scopes}
 
 
 class TopWalkersView(View):
