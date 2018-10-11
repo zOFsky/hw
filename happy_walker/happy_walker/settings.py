@@ -1,4 +1,5 @@
 import os
+import cloudinary
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,6 +24,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'home',
     'users',
+    'cloudinary',
 ]
 
 MIDDLEWARE = [
@@ -122,3 +124,9 @@ if "ENV" in os.environ:
         from happy_walker.dep_settings.qa_settings import *
 else:
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+    cloudinary.config(
+        cloud_name="happywalker",
+        api_key="167896788241779",
+        api_secret="rOItkY1sukqTpA43jwcShJDGPsY"
+    )
+

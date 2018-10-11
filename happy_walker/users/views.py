@@ -18,6 +18,7 @@ import time
 import calendar
 from random import choice
 from string import ascii_uppercase
+import cloudinary
 
 
 class UserRegisterView(View):
@@ -448,20 +449,20 @@ class UploadPhotoView(View):
 
     def post(self, request):
         if 'image' in request.FILES:
-            if request.FILES['image'].size < 5242880:
+            if request.FILES['image'].size < 500:
 
                 profile = Profile.objects.get(user_id=request.user.id)
-                if profile.image.name:
-                    profile.image.delete()
+                old_image = profile.image.public_id
+                cloudinary.uploader.destroy(old_image)
                 profile.image = request.FILES['image']
                 profile.save()
 
                 return JsonResponse({
-                    "image": "{}{}".format(request.get_host(), profile.image.url)
+                    "image": profile.image.url
                 }, status=200)
             else:
                 return JsonResponse({
-                    "message": "File too large. Size should not exceed 5 MB",
+                    "message": "File too large. Size should not exceed 500 KB",
                     "code": "size"
                 }, status=400)
         else:
