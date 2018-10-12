@@ -70,14 +70,17 @@ class UserRegisterView(View):
             'type': 'dict',
             'schema': {
                 'city': {
+                    'required': True,
                     'type': 'string',
                     'empty': False
                 },
                 'lat': {
+                    'required': True,
                     'type': 'number',
                     'empty': False
                 },
                 'lng': {
+                    'required': True,
                     'type': 'number',
                     'empty': False
                 }
