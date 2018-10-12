@@ -1,5 +1,6 @@
 from django.core.mail import EmailMultiAlternatives
 import os
+from django.conf import settings
 
 class EmailSender:
 
@@ -7,6 +8,8 @@ class EmailSender:
 
         if "FRONTEND_HOST" in os.environ:
             context['host'] = os.environ['FRONTEND_HOST']
+
+        context['domen'] = settings.DOMEN
 
         html_content = html_email.render(context)
         text_content = text_email.render(context)
