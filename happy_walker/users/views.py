@@ -60,6 +60,25 @@ class UserRegisterView(View):
             'maxlength': 30,
             'regex': '^[a-zA-Z]+$',
             'empty': False,
+        },
+        'location': {
+            'required': True,
+            'empty': False,
+            'type': 'dict',
+            'schema': {
+                'city': {
+                    'type': 'string',
+                    'empty': False
+                },
+                'lat': {
+                    'type': 'number',
+                    'empty': False
+                },
+                'lng': {
+                    'type': 'number',
+                    'empty': False
+                }
+            }
         }
 
     }
@@ -82,8 +101,13 @@ class UserRegisterView(View):
             User.objects.create_user(username=data['username'], email=data['email'], password=data['password'],
                                      first_name=data['first_name'], last_name=data['last_name'], is_active=False)
 
-            # send email
             user = User.objects.get(username=data['username'])
+            profile = Profile.objects.get(user_id=user.id)
+            profile.location = Location(lat=data['location']['lat'], lng=data['location']['lng'],
+                                        city=data['location']['city'])
+            profile.save()
+
+            # send email
             token_generator = TokenGenerator()
             confirmation_email = EmailSender()
             context = {
@@ -707,7 +731,7 @@ class TopWalkersView(View):
         lng = user.profile.location.lng
 
         top_walkers = []
-        data = Profile.objects.filter(location={'lat': lat, 'lng': lng}).exclude(user_id=request.user.id)
+        data = Profile.objects.filter(location={'lat': lat, 'lng': lng})
         data = data[::1]
         for walker in data:
             dict = {}
