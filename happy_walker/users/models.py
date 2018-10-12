@@ -2,6 +2,7 @@ from djongo import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import cloudinary.models as cloudinary
 
 
 class Location(models.Model):
@@ -15,7 +16,7 @@ class Location(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='images/photos', null=True)
+    image = cloudinary.CloudinaryField('image')
     google_image = models.CharField(max_length=255, null=True)
     favorites = models.ListField(default=[])
     location = models.EmbeddedModelField(

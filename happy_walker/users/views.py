@@ -11,7 +11,6 @@ from django.db.models import Q, Avg, Sum
 from oauthlib.oauth2.rfc6749.errors import MissingCodeError
 from django.core.exceptions import ObjectDoesNotExist
 from google_auth_oauthlib.flow import Flow
-import google.oauth2.credentials
 import googleapiclient.discovery
 import json
 from .custom_validator import CustomValidator
@@ -22,6 +21,7 @@ import time
 import calendar
 from random import choice
 from string import ascii_uppercase
+import cloudinary
 
 
 class UserRegisterView(View):
@@ -63,6 +63,25 @@ class UserRegisterView(View):
             'maxlength': 30,
             'regex': '^[a-zA-Z]+$',
             'empty': False,
+        },
+        'location': {
+            'required': True,
+            'empty': False,
+            'type': 'dict',
+            'schema': {
+                'city': {
+                    'type': 'string',
+                    'empty': False
+                },
+                'lat': {
+                    'type': 'number',
+                    'empty': False
+                },
+                'lng': {
+                    'type': 'number',
+                    'empty': False
+                }
+            }
         }
 
     }
@@ -85,8 +104,13 @@ class UserRegisterView(View):
             User.objects.create_user(username=data['username'], email=data['email'], password=data['password'],
                                      first_name=data['first_name'], last_name=data['last_name'], is_active=False)
 
-            # send email
             user = User.objects.get(username=data['username'])
+            profile = Profile.objects.get(user_id=user.id)
+            profile.location = Location(lat=data['location']['lat'], lng=data['location']['lng'],
+                                        city=data['location']['city'])
+            profile.save()
+
+            # send email
             token_generator = TokenGenerator()
             confirmation_email = EmailSender()
             context = {
@@ -161,6 +185,30 @@ class ConfirmEmailView(View):
                     "field": "token"
                 }]
             }, status=400)
+
+
+class ResendEmailView(View):
+
+    def get(self, request, user_id):
+
+        user = User.objects.get(id=user_id)
+
+        token_generator = TokenGenerator()
+        confirmation_email = EmailSender()
+        context = {
+            'uid': user.id,
+            'token': token_generator.make_token(user),
+        }
+        email = user.email
+        mail_subject = 'Activate your HappyWalker account'
+        html_email = get_template('acc_active_email.html')
+        text_email = get_template('acc_active_email')
+        confirmation_email.send_email(email, mail_subject, text_email, html_email, context)
+
+        return JsonResponse({
+            "uid": user.id,
+            "message": "Success",
+        }, status=201)
 
 
 class ChangeEmailView(View):
@@ -333,7 +381,6 @@ class ProfileView(View):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'google_image': user.profile.google_image,
             'favorites': user.profile.favorites,
             'location': {
                 'city': user.profile.location.city,
@@ -342,10 +389,10 @@ class ProfileView(View):
             }
         }
 
-        if user.profile.image.name:
-            profile['image'] = "{}{}{}".format('https://', request.get_host(), user.profile.image.url)
+        if user.profile.image.url:
+            profile['image'] = user.profile.image.url
         else:
-            profile['image'] = None
+            profile['image'] = user.profile.google_image
 
         if user_id == str(request.user.id) or user_id == 'me':
             profile['email'] = user.email
@@ -431,13 +478,14 @@ class UploadPhotoView(View):
             if request.FILES['image'].size < 5242880:
 
                 profile = Profile.objects.get(user_id=request.user.id)
-                if profile.image.name:
-                    profile.image.delete()
+                old_image = profile.image.public_id
+                if old_image:
+                    cloudinary.uploader.destroy(old_image)
                 profile.image = request.FILES['image']
                 profile.save()
 
                 return JsonResponse({
-                    "image": "{}{}".format(request.get_host(), profile.image.url)
+                    "image": profile.image.url
                 }, status=200)
             else:
                 return JsonResponse({
@@ -604,7 +652,7 @@ class ResetPasswordView(View):
                 }, status=444)
 
 
-class OAuth(View):
+class OAuthView(View):
 
     validation_schema = {
         'code': {
@@ -660,8 +708,8 @@ class OAuth(View):
             image = google_user['image']['url']
             nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
             password = ''.join(choice(ascii_uppercase) for i in range(12))
-            user = User.objects.create_user(username=nickname, email=email, password=password, first_name=first_name,
-                                            last_name=last_name, is_active=True)
+            user = User.objects.create_user(username=nickname, email=email, password=password,
+                                            first_name=first_name, last_name=last_name, is_active=True)
             Profile.objects.filter(user_id=user.id).update(access_token=credentials.token,
                                                            refresh_token=credentials.refresh_token,
                                                            google_image=image)
@@ -671,47 +719,6 @@ class OAuth(View):
         return JsonResponse({
             "message": "login success",
         }, status=200)
-
-
-class TestView(View):
-    def get(self, request):
-        # if not OAuthData.objects.filter(user_id=request.user.id):
-        #     return redirect('oauth')
-
-        profile = Profile.objects.get(user_id=request.user.id)
-
-        # credentials = OAuthData.objects.get(user_id=request.user.id)
-        # credentials = google.oauth2.credentials.Credentials(**credentials_to_dict(credentials))
-        credentials = google.oauth2.credentials.Credentials(None,
-                                                            client_id='273646785748-1iii0vgckdfr7cer7gu2had4dln55qvm.apps.googleusercontent.com',
-                                                            client_secret='k40UuBJGSq2dnqkh_l3SyS2P',
-                                                            refresh_token=profile.refresh_token,
-                                                            token_uri='https://accounts.google.com/o/oauth2/token')
-
-        profile = googleapiclient.discovery.build(
-                'plus', 'v1', credentials=credentials)
-        profile = profile.people().get(userId='me').execute()
-
-        # fit = googleapiclient.discovery.build(
-        #     'fitness', 'v1', credentials=credentials)
-
-        # files = fit.users().dataSources().datasets().get(
-        #     dataSourceId='raw:com.google.calories.expended:com.google.android.apps.fitness:user_input',
-        #     userId='me', datasetId='1400000000000000000-1537971207000000000').execute()
-
-        # files = fit.users1/29doQ0axe3keJubTsWb4Aig3Se6fY2ius50dhBemZdo1/29doQ0axe3keJubTsWb4Aig3Se6fY2ius50dhBemZdo().dataSources().list(
-        #     userId='me').execute()
-
-        return JsonResponse(profile)
-
-
-def credentials_to_dict(credentials):
-    return {'token': credentials.token,
-            'refresh_token': credentials.refresh_token,
-            'token_uri': credentials.token_uri,
-            'client_id': credentials.client_id,
-            'client_secret': credentials.client_secret,
-            'scopes': credentials.scopes}
 
 
 class TopWalkersView(View):
@@ -727,15 +734,14 @@ class TopWalkersView(View):
         lng = user.profile.location.lng
 
         top_walkers = []
-        data = Profile.objects.filter(location={'lat': lat, 'lng': lng}).exclude(user_id=request.user.id)
+        data = Profile.objects.filter(location={'lat': lat, 'lng': lng})
         data = data[::1]
         for walker in data:
             dict = {}
-            if walker.image.name:
-                dict['image'] = "{}{}{}".format('https://', request.get_host(), walker.image.url)
+            if walker.image.url:
+                dict['image'] = walker.image.url
             else:
-                dict['image'] = None
-            dict['google_image'] = walker.google_image
+                dict['image'] = walker.google_image
             dict['id'] = walker.user_id
             dict['first_name'] = walker.user.first_name
             dict['last_name'] = walker.user.last_name

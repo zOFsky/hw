@@ -1,4 +1,5 @@
 import os
+import cloudinary
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,6 +25,7 @@ INSTALLED_APPS = [
     'home',
     'users',
     'fit',
+    'cloudinary',
 ]
 
 MIDDLEWARE = [
@@ -106,6 +108,8 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
+DOMEN = 'localhost'
+
 CLIENT_SECRETS_FILE = 'users/client_secret.json'
 API_SERVICE_NAME = 'fitness'
 API_VERSION = 'v1'
@@ -126,3 +130,9 @@ if "ENV" in os.environ:
         from happy_walker.dep_settings.qa_settings import *
 else:
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+    cloudinary.config(
+        cloud_name="happywalker",
+        api_key="167896788241779",
+        api_secret="rOItkY1sukqTpA43jwcShJDGPsY"
+    )
+
