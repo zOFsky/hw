@@ -32,7 +32,7 @@ class UpdateTest(TestCase):
         self.assertEqual(resp_confirm_email.status_code, 200)
         login_data = self.methods.create_json_request(username_or_email='username1',
                              password='abc12345')
-        resp2 = self.client.post(self.login_url, login_data, 
+        resp2 = self.client.post(self.login_url, login_data,
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
         update_data = self.methods.create_json_request(first_name="Andriy", last_name="Staythere",
@@ -55,7 +55,7 @@ class UpdateTest(TestCase):
         self.assertEqual(resp_confirm_email.status_code, 200)
         login_data = self.methods.create_json_request(username_or_email='username1',
                              password='abc12345')
-        resp2 = self.client.post(self.login_url, login_data, 
+        resp2 = self.client.post(self.login_url, login_data,
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
         update_data = self.methods.create_json_request(first_name="Andriy", last_name="Staythere", email='123')
@@ -106,7 +106,7 @@ class UpdateTest(TestCase):
         self.assertEqual(resp_confirm_email.status_code, 200)
         login_data = self.methods.create_json_request(username_or_email='username1',
                              password='abc12345')
-        resp2 = self.client.post(self.login_url, login_data, 
+        resp2 = self.client.post(self.login_url, login_data,
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
         update_data = self.methods.create_json_request(first_name="Andriy", email="asd@fun.com", last_name="Doe")
@@ -128,7 +128,7 @@ class UpdateTest(TestCase):
         self.assertEqual(resp_confirm_email.status_code, 200)
         login_data = self.methods.create_json_request(username_or_email='username1',
                              password='abc12345')
-        resp2 = self.client.post(self.login_url, login_data, 
+        resp2 = self.client.post(self.login_url, login_data,
                                  content_type="application/json")
         self.assertEqual(resp2.status_code, 230)
         update_data = self.methods.create_json_request(first_name="Andriy", email="asd@funcom", last_name="Doe")
