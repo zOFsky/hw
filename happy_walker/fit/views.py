@@ -5,25 +5,17 @@ from users.models import Profile
 from django.http import JsonResponse
 from django.conf import settings
 from django.shortcuts import redirect
-#from django.http import HttpResponseRedirect, HttpResponseBadRequest
-#from django.template.loader import get_template
 from django.views.generic import View
-#from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q, Avg, Sum
 from django.core.exceptions import ObjectDoesNotExist
-#from django.contrib.auth.mixins import LoginRequiredMixin
-#from google_auth_oauthlib.flow import Flow
 import google.oauth2.credentials
 import googleapiclient.discovery
 import json
-#from .custom_validator import CustomValidator
-#from .tokens import TokenGenerator
-#from .email_sender import EmailSender
 from . import epochtime
 from .json_handlers import get_value_from_json, create_json_request
 # Create your views here.
 
-class FitDataView(View):
+class SaveFitDataView(View):
     def get(self, request):
 
         profile = Profile.objects.get(user_id=request.user.id)
@@ -50,36 +42,41 @@ class FitDataView(View):
         bucket_dict = { "durationMillis": epochtime.day }
 
         data_request = create_json_request(aggregateBy=data_list,
-            bucketByTime=bucket_dict, startTimeMillis=(current_time - epochtime.month),
+            bucketByTime=bucket_dict, startTimeMillis=(current_time - epochtime.week),
             endTimeMillis=(current_time+day))
         
-        # distance_request = create_json_request(aggregateBy=distance_list,
-        #     bucketByTime=bucket_dict, startTimeMillis=(current_time - epochtime.week),
-        #     endTimeMillis=current_time)
-
-        # calor_request = create_json_request(aggregateBy=calor_list,
-        #     bucketByTime=bucket_dict, startTimeMillis=(current_time - epochtime.week),
-        #     endTimeMillis=current_time)
-
+        
         fit_data = fit.users().dataset().aggregate(userId='me', 
             body=json.loads(data_request)).execute()
         
         Profile.objects.filter(user_id=profile.user_id).update(access_token=credentials.token,
                                                                refresh_token=credentials.refresh_token)
 
-        # distance_data = fit.users().dataset().aggregate(userId='me', 
-        #     body=json.loads(distance_request)).execute()
-
-        # calor_data = fit.users().dataset().aggregate(userId='me', 
-        #     body=json.loads(calor_request)).execute()
-        
         list_by_days = get_value_from_json(json.dumps(fit_data))
         dict_by_days = { i : list_by_days[i] for i in range(0, len(list_by_days)) }
+        
+        user = User.objects.get(username=request.user.username)
+        for elem in list_by_days:
+            if not(FitDataModel.objects.filter(user=user, 
+                                               date=elem["date"]).exists()):
+                day_data = FitDataModel(user=user, date=elem['date'],
+                        steps=elem["steps"], distance=elem["distance"],
+                        calories=elem["calories"])
+                day_data.save()
+            else:
+                FitDataModel.objects.filter(user=user,date=elem["date"]).update(
+                                                steps=elem["steps"], 
+                                                distance=elem["distance"],
+                                                calories=elem["calories"]
+                                                )
+        return JsonResponse({
+                'message': f'We saved data in {user.username}'
+            }, status=200)
         #return JsonResponse(fit_data)
         return JsonResponse(dict_by_days)
 
-
-class SaveFitDataView(View):
+"""
+class FitDataView(View):
     def get(self, request):
         if 'credentials' not in request.session:
             return redirect('/oauth')
@@ -135,17 +132,29 @@ class SaveFitDataView(View):
         return JsonResponse({
                 'message':'We saved data in myusername'
             }, status=200)
-    
+   """ 
 
 class LastNDaysView(View):
-    def get(self, request):
-        user = User.objects.get(username="myusername")
-        since_data = datetime.date.today() - datetime.timedelta(days=3)
-        # total_steps = FitDataModel.objects.filter(user=user, 
-        #                             date__gt=since_data).aggregate(Avg('steps'))
-        total_steps = FitDataModel.objects.filter(user=user,
-                                                  date__gt=since_data).aggregate(Sum('steps'))
+    def get(self, request, req_days):
+        since_data = datetime.date.today() - datetime.timedelta(days=req_days)
+        final_list = [
+            {
+                "username": User.objects.get(id=fit_record['user_id']).username,
+                "first_name": User.objects.get(id=fit_record['user_id']).first_name,
+                "last_name": User.objects.get(id=fit_record['user_id']).last_name,
+                "steps": fit_record['steps__sum'], 
+                "distance": fit_record['distance__sum'],
+                "calories": fit_record['calories__sum']
+            } for fit_record in (FitDataModel.objects \
+                                .values('user_id') \
+                                .filter(date__gt=since_data) \
+                                .annotate(Sum('steps'))) \
+                                .annotate(Sum('distance')) \
+                                .annotate(Sum('calories')) \
+                                .order_by('-steps__sum')
+        ]
+        #total_steps = FitDataModel.objects.values('user__first_name').filter(date__gt=since_data).annotate(Sum('steps'))
+        users_data = str(final_list) 
         return JsonResponse({
-                'message':'Here are results for your last days', 
-                'steps for 3 days': total_steps
+                f'steps for {req_days} days': users_data
             }, status=200)
