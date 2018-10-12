@@ -28,6 +28,9 @@ class Profile(models.Model):
     objects = models.DjongoManager()
 
 
+    def __str__(self):
+        return self.user
+
 @receiver(post_save, sender=get_user_model())
 def create_user_profile(sender, instance, created, **kwargs):
     if created:

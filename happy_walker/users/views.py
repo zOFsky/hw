@@ -1,3 +1,4 @@
+import time, datetime
 from django.contrib.auth.models import User
 from django.conf import settings
 from users.models import Profile, Location
@@ -6,7 +7,8 @@ from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.template.loader import get_template
 from django.views.generic import View
 from django.contrib.auth import authenticate, login, logout
-from django.db.models import Q
+from django.db.models import Q, Avg, Sum
+from oauthlib.oauth2.rfc6749.errors import MissingCodeError
 from django.core.exceptions import ObjectDoesNotExist
 from google_auth_oauthlib.flow import Flow
 import googleapiclient.discovery
@@ -14,6 +16,7 @@ import json
 from .custom_validator import CustomValidator
 from .tokens import TokenGenerator
 from .email_sender import EmailSender
+#from . import epochtime
 import time
 import calendar
 from random import choice
@@ -60,6 +63,28 @@ class UserRegisterView(View):
             'maxlength': 30,
             'regex': '^[a-zA-Z]+$',
             'empty': False,
+        },
+        'location': {
+            'required': True,
+            'empty': False,
+            'type': 'dict',
+            'schema': {
+                'city': {
+                    'required': True,
+                    'type': 'string',
+                    'empty': False
+                },
+                'lat': {
+                    'required': True,
+                    'type': 'number',
+                    'empty': False
+                },
+                'lng': {
+                    'required': True,
+                    'type': 'number',
+                    'empty': False
+                }
+            }
         }
 
     }
@@ -82,8 +107,13 @@ class UserRegisterView(View):
             User.objects.create_user(username=data['username'], email=data['email'], password=data['password'],
                                      first_name=data['first_name'], last_name=data['last_name'], is_active=False)
 
-            # send email
             user = User.objects.get(username=data['username'])
+            profile = Profile.objects.get(user_id=user.id)
+            profile.location = Location(lat=data['location']['lat'], lng=data['location']['lng'],
+                                        city=data['location']['city'])
+            profile.save()
+
+            # send email
             token_generator = TokenGenerator()
             confirmation_email = EmailSender()
             context = {
@@ -707,7 +737,7 @@ class TopWalkersView(View):
         lng = user.profile.location.lng
 
         top_walkers = []
-        data = Profile.objects.filter(location={'lat': lat, 'lng': lng}).exclude(user_id=request.user.id)
+        data = Profile.objects.filter(location={'lat': lat, 'lng': lng})
         data = data[::1]
         for walker in data:
             dict = {}

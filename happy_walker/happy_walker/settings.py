@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'home',
     'users',
+    'fit',
     'cloudinary',
 ]
 
@@ -113,6 +114,11 @@ CLIENT_SECRETS_FILE = 'users/client_secret.json'
 API_SERVICE_NAME = 'fitness'
 API_VERSION = 'v1'
 REDIRECT_URI = 'https://a-qa-frontend-happy-walker.herokuapp.com/oauth2callback'
+TOKEN_URI = 'https://accounts.google.com/o/oauth2/token'
+# CLIENT_ID = os.environ['CLIENT_ID']
+# CLIENT_SECRET = os.environ['CLIENT_SECRET']
+CLIENT_ID = '273646785748-1iii0vgckdfr7cer7gu2had4dln55qvm.apps.googleusercontent.com'
+CLIENT_SECRET = 'k40UuBJGSq2dnqkh_l3SyS2P'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
