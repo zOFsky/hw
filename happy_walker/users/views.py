@@ -749,7 +749,7 @@ class CredentialsView(View):
         flow = Flow.from_client_secrets_file(
             settings.CLIENT_SECRETS_FILE,
             scopes=None,
-            redirect_uri=settings.REDIRECT_URI)
+            redirect_uri=settings.REDIRECT_URI_CRED)
 
         try:
             flow.fetch_token(code=data['code'])
