@@ -136,6 +136,13 @@ class FitDataView(View):
 
 class TopWalkersView(View):
     def get(self, request, req_days):
+        user = User.objects.get(id=request.user.id)
+        if user.profile.location.city == '':
+            return JsonResponse({'top_walkers': []}, status=200)
+
+        lat = user.profile.location.lat
+        lng = user.profile.location.lng
+
         since_data = datetime.date.today() - datetime.timedelta(days=req_days)
         final_list = [
             {
@@ -144,10 +151,11 @@ class TopWalkersView(View):
                 "last_name": User.objects.get(id=fit_record['user_id']).last_name,
                 "steps": fit_record['steps__sum'], 
                 "distance": fit_record['distance__sum'],
-                "calories": fit_record['calories__sum']
+                "calories": fit_record['calories__sum'],
+                "image": Profile.objects.get(id=fit_record['user_id']).google_image
             } for fit_record in (FitDataModel.objects \
                                 .values('user_id') \
-                                .filter(date__gt=since_data) \
+                                .filter(date__gt=since_data, user__profile__location=user.profile.location) \
                                 .annotate(Sum('steps'))) \
                                 .annotate(Sum('distance')) \
                                 .annotate(Sum('calories')) \
