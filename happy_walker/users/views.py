@@ -763,7 +763,7 @@ class CredentialsView(View):
         google_user = google_user.people().get(userId='me').execute()
         google_id = google_user['id']
 
-        if User.objects.filter(id=data['uid']).exists():
+        if Profile.objects.filter(google_id=google_id).exists():
             return JsonResponse({
                 "message": "this account is already in use",
                 "uid": data['uid']
