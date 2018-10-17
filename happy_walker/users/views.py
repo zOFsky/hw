@@ -685,7 +685,7 @@ class OAuthView(View):
         try:
             flow.fetch_token(code=data['code'])
         except:
-            return JsonResponse({'message': 'Bad request'}, status=400)
+            return JsonResponse({'message': 'Bad request'}, status=401)
 
         credentials = flow.credentials
 
@@ -754,7 +754,7 @@ class CredentialsView(View):
         try:
             flow.fetch_token(code=data['code'])
         except:
-            return JsonResponse({'message': 'Bad request'}, status=400)
+            return JsonResponse({'message': 'Bad request'}, status=401)
 
         credentials = flow.credentials
 
