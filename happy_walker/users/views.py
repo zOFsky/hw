@@ -436,6 +436,13 @@ class ProfileView(View):
                 profile.save()
 
             if data["email"] != user.email:
+
+                if User.objects.filter(email=data['email']).exists():
+                    return JsonResponse({
+                        "errors": [{"message": "user with that credentials already exists",
+                                    "code": "registration.user_exists"}]
+                    }, status=460)
+
                 # sending confirmation letter to new email
                 token_generator = TokenGenerator()
                 confirmation_email = EmailSender()
