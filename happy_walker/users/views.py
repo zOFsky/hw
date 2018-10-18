@@ -318,7 +318,7 @@ class UserLoginView(View):
                         "uid": existing_user.id
                     }, status=423)
 
-                login(request, user)
+                login(request, existing_user)
                 if not request.session.exists(request.session.session_key):
                     request.session.create() 
                 return JsonResponse({
@@ -754,7 +754,7 @@ class CredentialsView(View):
         try:
             flow.fetch_token(code=data['code'])
         except:
-            return JsonResponse({'message': 'Bad request'}, status=401)
+            return JsonResponse({'message': 'authorization code is invalid'}, status=400)
 
         credentials = flow.credentials
 
