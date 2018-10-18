@@ -692,7 +692,7 @@ class OAuthView(View):
         try:
             flow.fetch_token(code=data['code'])
         except:
-            return JsonResponse({'message': 'Bad request'}, status=401)
+            return JsonResponse({'message': 'Token invalid'}, status=401)
 
         credentials = flow.credentials
 

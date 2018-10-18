@@ -63,7 +63,7 @@ DATABASES = {
        'default': {
            'ENGINE': 'djongo',
            'NAME': 'mongodb',
-           'HOST': 'db',
+           'HOST': '',
            'PORT': 27017,
        }
    }
@@ -113,7 +113,8 @@ DOMEN = 'localhost'
 CLIENT_SECRETS_FILE = 'users/client_secret.json'
 API_SERVICE_NAME = 'fitness'
 API_VERSION = 'v1'
-REDIRECT_URI = 'https://a-qa-frontend-happy-walker.herokuapp.com/oauth2callback'
+REDIRECT_URI = 'http://localhost:3000/oauth2callback'
+REDIRECT_URI_CRED = 'localhost:3000/oauthWalker'
 TOKEN_URI = 'https://accounts.google.com/o/oauth2/token'
 # CLIENT_ID = os.environ['CLIENT_ID']
 # CLIENT_SECRET = os.environ['CLIENT_SECRET']
@@ -121,6 +122,9 @@ CLIENT_ID = '273646785748-1iii0vgckdfr7cer7gu2had4dln55qvm.apps.googleuserconten
 CLIENT_SECRET = 'k40UuBJGSq2dnqkh_l3SyS2P'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 
 if "ENV" in os.environ:
     ENV = os.environ['ENV']
