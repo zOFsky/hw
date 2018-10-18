@@ -15,3 +15,6 @@ def date_to_epoch():
 
 def epoch_to_date(time_milis):
     return time.strftime('%Y-%m-%d', time.localtime(time_milis/1000))
+
+def extract_hour(time_milis):
+    return time.strftime('%H:%M', time.localtime(time_milis/1000))
