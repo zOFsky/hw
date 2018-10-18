@@ -582,6 +582,8 @@ class ForgotPasswordView(View):
         except ObjectDoesNotExist:
             user = False
         if user:
+            if not user.is_active:
+                return JsonResponse({"message": "user is not activated"}, status=423)
             # send email
             token_generator = TokenGenerator()
             confirmation_email = EmailSender()
