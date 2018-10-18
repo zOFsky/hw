@@ -710,8 +710,7 @@ class OAuthView(View):
 
             if User.objects.filter(email=email).exists():
                 return JsonResponse({
-                    "message": "this account is already in use",
-                    "uid": data['uid']
+                    "message": "this account is already in use"
                 }, status=401)
 
             nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
