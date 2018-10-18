@@ -707,6 +707,13 @@ class OAuthView(View):
             last_name = google_user['name']['familyName']
             image = google_user['image']['url']
             email = google_user['emails'][0]['value']
+
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({
+                    "message": "this account is already in use",
+                    "uid": data['uid']
+                }, status=401)
+
             nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
             password = ''.join(choice(ascii_uppercase) for i in range(12))
             user = User.objects.create_user(username=nickname, email=email, password=password,
