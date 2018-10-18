@@ -19,5 +19,5 @@ urlpatterns = [
     path('credentials', csrf_exempt(CredentialsView.as_view()), name='credentials'),
     path('top_walkers', login_required(csrf_exempt(TopWalkersView.as_view())), name='top_walkers'),
     path('favorite/<favorite_id>', login_required(csrf_exempt(FavoritesView.as_view())), name='favorites'),
-    path('<user_id>', login_required(ProfileView.as_view()), name='profile'),
+    path('<user_id>', csrf_exempt(login_required(ProfileView.as_view()), name='profile'),
 ]
