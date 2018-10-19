@@ -710,7 +710,7 @@ class OAuthView(View):
 
             first_name = google_user['name']['givenName']
             last_name = google_user['name']['familyName']
-            image = google_user['image']['url']
+            image = google_user['image']['url'].replace('?sz=50', '?sz=200')
             email = google_user['emails'][0]['value']
 
             if User.objects.filter(email=email).exists():
