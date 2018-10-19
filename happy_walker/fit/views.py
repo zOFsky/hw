@@ -158,7 +158,7 @@ class TopWalkersView(View):
                 n=n+1  
                 final_list.append(
                     {
-                        "position": fit_record['id'],
+                        "position": n,
                         "username": fit_record['username'],
                         "first_name": fit_record['first_name'],
                         "last_name": fit_record['last_name'],
