@@ -63,7 +63,7 @@ DATABASES = {
        'default': {
            'ENGINE': 'djongo',
            'NAME': 'mongodb',
-           'HOST': '',
+           'HOST': 'db',
            'PORT': 27017,
        }
    }

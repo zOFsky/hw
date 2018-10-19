@@ -1,13 +1,11 @@
-import time, datetime
+import datetime
 from django.contrib.auth.models import User
 from .models import FitDataModel
 from users.models import Profile
 from django.http import JsonResponse
 from django.conf import settings
-from django.shortcuts import redirect
 from django.views.generic import View
-from django.db.models import Q, Avg, Sum, Value, F, Count
-from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Sum
 import google.oauth2.credentials
 import googleapiclient.discovery
 import json
@@ -29,17 +27,17 @@ class SaveFitDataView(View):
         fit = googleapiclient.discovery.build(
             'fitness', 'v1', credentials=credentials)
 
-        
         current_time = epochtime.date_to_epoch() * 1000
-        week = epochtime.week * 1000
         day = epochtime.day
 
         
-        data_list = [{"dataTypeName": "com.google.step_count.delta"},
-                     {"dataTypeName": "com.google.distance.delta"},
-                     {"dataTypeName": "com.google.calories.expended"}
-                    ]
-        bucket_dict = { "durationMillis": epochtime.day }
+        data_list = [
+            {"dataTypeName": "com.google.step_count.delta"},
+            {"dataTypeName": "com.google.distance.delta"},
+            {"dataTypeName": "com.google.calories.expended"}
+            ]
+
+        bucket_dict = {"durationMillis": epochtime.day}
 
         data_request = create_json_request(aggregateBy=data_list,
             bucketByTime=bucket_dict, startTimeMillis=(current_time - epochtime.day*50),
@@ -151,22 +149,22 @@ class TopWalkersView(View):
                     .annotate(total_steps=Sum('user_fit__steps'), 
                             total_distance=Sum('user_fit__distance'),
                             total_calories=Sum('user_fit__calories')) \
-                    .select_related('profile') \
-                    .values('username', 'first_name', 'last_name', 'total_steps', 
-                            'total_distance', 'total_calories', 'profile', 'id') \
+                    .values('first_name', 'last_name', 'total_steps',
+                            'total_distance', 'total_calories', 'id') \
                     .order_by('-total_steps'):
-                n=n+1  
+                n=n+1
+
                 final_list.append(
                     {
-                        "position": fit_record['id'],
-                        "username": fit_record['username'],
+                        "id": fit_record['id'],
+                        "position": n,
                         "first_name": fit_record['first_name'],
                         "last_name": fit_record['last_name'],
                         "steps": fit_record['total_steps'],
                         "distance": fit_record['total_distance'],
                         "calories": fit_record['total_calories'],
-                        "image": Profile.objects.get(user_id=fit_record['id']).google_image
-                    }   
+                        "image": Profile.objects.get(user_id=fit_record['id']).get_image()
+                    }
                 )  
         # result_list = [
         #     fit_record for fit_record in FitDataModel.objects \
