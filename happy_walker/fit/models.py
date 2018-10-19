@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 
 
 class FitDataModel(models.Model):
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name = "user_fit")
     date = models.DateField()
     steps = models.IntegerField(default=0)
     distance = models.FloatField(default=0)
