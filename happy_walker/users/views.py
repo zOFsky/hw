@@ -313,9 +313,12 @@ class UserLoginView(View):
 
                 profile = Profile.objects.get(user_id=existing_user.id)
                 if not profile.refresh_token:
-                    return JsonResponse({"message": "user did not give access"}, status=423)
+                    return JsonResponse({
+                        "message": "user did not give access",
+                        "uid": existing_user.id
+                    }, status=423)
 
-                login(request, user)
+                login(request, existing_user)
                 if not request.session.exists(request.session.session_key):
                     request.session.create() 
                 return JsonResponse({
@@ -433,6 +436,13 @@ class ProfileView(View):
                 profile.save()
 
             if data["email"] != user.email:
+
+                if User.objects.filter(email=data['email']).exists():
+                    return JsonResponse({
+                        "errors": [{"message": "user with that credentials already exists",
+                                    "code": "registration.user_exists"}]
+                    }, status=460)
+
                 # sending confirmation letter to new email
                 token_generator = TokenGenerator()
                 confirmation_email = EmailSender()
@@ -572,6 +582,8 @@ class ForgotPasswordView(View):
         except ObjectDoesNotExist:
             user = False
         if user:
+            if not user.is_active:
+                return JsonResponse({"message": "user is not activated"}, status=423)
             # send email
             token_generator = TokenGenerator()
             confirmation_email = EmailSender()
@@ -682,46 +694,103 @@ class OAuthView(View):
         try:
             flow.fetch_token(code=data['code'])
         except:
-            return JsonResponse({'message': 'Bad request'}, status=400)
+            return JsonResponse({'message': 'Token invalid'}, status=401)
 
         credentials = flow.credentials
 
         google_user = googleapiclient.discovery.build(
             'plus', 'v1', credentials=credentials)
         google_user = google_user.people().get(userId='me').execute()
-        email = google_user['emails'][0]['value']
+        google_id = google_user['id']
 
-        if User.objects.filter(email=email).exists():
-            user = User.objects.get(email=email)
-            profile = Profile.objects.get(user_id=user.id)
+        if Profile.objects.filter(google_id=google_id).exists():
+            profile = Profile.objects.get(google_id=google_id)
 
-            if not profile.refresh_token:
-                profile.refresh_token = credentials.refresh_token
-                profile.access_token = credentials.token
-                profile.save()
-            else:
-                login(request, user)
-                return JsonResponse({
-                    "message": "login success",
-                }, status=200)
+            login(request, profile.user)
+            return JsonResponse({
+                "message": "login success",
+            }, status=200)
         else:
 
             first_name = google_user['name']['givenName']
             last_name = google_user['name']['familyName']
             image = google_user['image']['url']
+            email = google_user['emails'][0]['value']
+
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({
+                    "message": "this account is already in use"
+                }, status=401)
+
             nickname = "{}{}".format(first_name, calendar.timegm(time.gmtime()))
             password = ''.join(choice(ascii_uppercase) for i in range(12))
             user = User.objects.create_user(username=nickname, email=email, password=password,
                                             first_name=first_name, last_name=last_name, is_active=True)
             Profile.objects.filter(user_id=user.id).update(access_token=credentials.token,
                                                            refresh_token=credentials.refresh_token,
-                                                           google_image=image)
+                                                           google_image=image, google_id=google_id)
 
         login(request, user)
 
         return JsonResponse({
             "message": "login success",
         }, status=200)
+
+
+class CredentialsView(View):
+
+    validation_schema = {
+        'code': {
+            'required': True,
+            'type': 'string',
+            'empty': False
+        },
+        'uid': {
+            'required': True,
+            'type': 'integer',
+            'empty': False
+        }
+    }
+
+    def post(self, request):
+
+        validator = CustomValidator(self.validation_schema)
+        if validator.request_validation(request):
+            errors_dict = validator.request_validation(request)
+            return JsonResponse(errors_dict, status=400)
+        else:
+            data = json.loads(request.body)
+
+        flow = Flow.from_client_secrets_file(
+            settings.CLIENT_SECRETS_FILE,
+            scopes=None,
+            redirect_uri=settings.REDIRECT_URI_CRED)
+
+        try:
+            flow.fetch_token(code=data['code'])
+        except:
+            return JsonResponse({'message': 'authorization code is invalid'}, status=400)
+
+        credentials = flow.credentials
+
+        google_user = googleapiclient.discovery.build(
+            'plus', 'v1', credentials=credentials)
+        google_user = google_user.people().get(userId='me').execute()
+        google_id = google_user['id']
+
+        if Profile.objects.filter(google_id=google_id).exists():
+            return JsonResponse({
+                "message": "this account is already in use",
+                "uid": data['uid']
+            }, status=401)
+        else:
+            Profile.objects.filter(user_id=data['uid']).update(access_token=credentials.token,
+                                                               refresh_token=credentials.refresh_token,
+                                                               google_id=google_id)
+            user = User.objects.get(id=data['uid'])
+            login(request, user)
+
+        return JsonResponse({"message": "login success"}, status=200)
 
 
 class TopWalkersView(View):

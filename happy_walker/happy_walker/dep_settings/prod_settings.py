@@ -1,10 +1,10 @@
 import os
-import cloudinary
 
 DEBUG = False
 
 SECRET_KEY = os.environ['SECRET_KEY']
 REDIRECT_URI = os.environ['REDIRECT_URI']
+REDIRECT_URI_CRED = os.environ['REDIRECT_URI_CRED']
 DOMEN = os.environ['DOMEN']
 
 ALLOWED_HOSTS = ['a-qa-backend-happy-walker.herokuapp.com', 'a-prod-backend-happy-walker.herokuapp.com']
@@ -27,9 +27,6 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
 EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
-
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_CREDENTIALS = True
 
 # CORS_ORIGIN_WHITELIST = (
 #     'https://heppy-walkernew.herokuapp.com',

@@ -22,6 +22,7 @@ class Profile(models.Model):
     location = models.EmbeddedModelField(
         model_container=Location,
     )
+    google_id = models.CharField(max_length=255, null=True)
     access_token = models.CharField(max_length=255, null=True)
     refresh_token = models.CharField(max_length=255, null=True)
 
