@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.conf import settings
 from django.shortcuts import redirect
 from django.views.generic import View
-from django.db.models import Q, Avg, Sum
+from django.db.models import Q, Avg, Sum, Value, F, Count
 from django.core.exceptions import ObjectDoesNotExist
 import google.oauth2.credentials
 import googleapiclient.discovery
@@ -136,27 +136,56 @@ class FitDataView(View):
 
 class TopWalkersView(View):
     def get(self, request, req_days):
+        user = User.objects.get(id=request.user.id)
+        if user.profile.location.city == '':
+            return JsonResponse({'top_walkers': []}, status=200)
+
+        lat = user.profile.location.lat
+        lng = user.profile.location.lng
+
         since_data = datetime.date.today() - datetime.timedelta(days=req_days)
-        final_list = [
-            {
-                "username": User.objects.get(id=fit_record['user_id']).username,
-                "first_name": User.objects.get(id=fit_record['user_id']).first_name,
-                "last_name": User.objects.get(id=fit_record['user_id']).last_name,
-                "steps": fit_record['steps__sum'], 
-                "distance": fit_record['distance__sum'],
-                "calories": fit_record['calories__sum']
-            } for fit_record in (FitDataModel.objects \
-                                .values('user_id') \
-                                .filter(date__gt=since_data) \
-                                .annotate(Sum('steps'))) \
-                                .annotate(Sum('distance')) \
-                                .annotate(Sum('calories')) \
-                                .order_by('-steps__sum')
-        ]
+        n = 0
+        final_list = []
+        for fit_record in User.objects \
+                    .filter(user_fit__date__gt=since_data, profile__location=user.profile.location) \
+                    .annotate(total_steps=Sum('user_fit__steps'), 
+                            total_distance=Sum('user_fit__distance'),
+                            total_calories=Sum('user_fit__calories')) \
+                    .select_related('profile') \
+                    .values('username', 'first_name', 'last_name', 'total_steps', 
+                            'total_distance', 'total_calories', 'profile', 'id') \
+                    .order_by('-total_steps'):
+                n=n+1  
+                final_list.append(
+                    {
+                        "position": fit_record['id'],
+                        "username": fit_record['username'],
+                        "first_name": fit_record['first_name'],
+                        "last_name": fit_record['last_name'],
+                        "steps": fit_record['total_steps'],
+                        "distance": fit_record['total_distance'],
+                        "calories": fit_record['total_calories'],
+                        "image": Profile.objects.get(user_id=fit_record['id']).google_image
+                    }   
+                )  
+        # result_list = [
+        #     fit_record for fit_record in FitDataModel.objects \
+        #                         .filter(date__gt=since_data, user__profile__location=user.profile.location) \
+        #                         .prefetch_related('user') \
+        #                         #.values('user__username') \
+        #                         .annotate(Sum('steps'), Sum('distance'), Sum('calories')) \
+        #                         .order_by('-steps__sum').get(id=1)
+        # ]
         #total_steps = FitDataModel.objects.values('user__first_name').filter(date__gt=since_data).annotate(Sum('steps'))
+        # result = FitDataModel.objects.filter(date__gt=since_data) \
+        #             .annotate(Sum('steps')) \
+        #             .get(id=1)
+
         users_data = {
             'top walkers': final_list
         }
+ 
+        #return JsonResponse({'result':str(result)})
         return JsonResponse(users_data, status=200)
 
 class UserFitDataView(View):
