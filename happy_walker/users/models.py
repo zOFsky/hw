@@ -26,8 +26,13 @@ class Profile(models.Model):
     access_token = models.CharField(max_length=255, null=True)
     refresh_token = models.CharField(max_length=255, null=True)
 
-    objects = models.DjongoManager()
+    def get_image(self):
+        if self.image:
+            return self.image.url
+        else:
+            return self.google_image
 
+    objects = models.DjongoManager()
 
     def __str__(self):
         return self.user

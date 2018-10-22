@@ -388,17 +388,13 @@ class ProfileView(View):
             'first_name': user.first_name,
             'last_name': user.last_name,
             'favorites': user.profile.favorites,
+            'image': user.profile.get_image(),
             'location': {
                 'city': user.profile.location.city,
                 'lat': user.profile.location.lat,
                 'lng': user.profile.location.lng
             }
         }
-
-        if user.profile.image.url:
-            profile['image'] = user.profile.image.url
-        else:
-            profile['image'] = user.profile.google_image
 
         if user_id == str(request.user.id) or user_id == 'me':
             profile['email'] = user.email
