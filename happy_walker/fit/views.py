@@ -155,14 +155,15 @@ class UserFitDataView(View):
         week = epochtime.week * 1000
         day = epochtime.day
 
-        if req_days == 1:
-            data_list = [{"dataTypeName": "com.google.step_count.delta"},
+        data_list = [{"dataTypeName": "com.google.step_count.delta"},
                         {"dataTypeName": "com.google.distance.delta"},
                         {"dataTypeName": "com.google.calories.expended"}
                         ]
-            bucket_dict = { "durationMillis": epochtime.hour }
+        bucket_dict = { "durationMillis": epochtime.day }
+        if req_days == 1:
+            bucket_hour = { "durationMillis": epochtime.hour }
             data_request = create_json_request(aggregateBy=data_list,
-                bucketByTime=bucket_dict, startTimeMillis=(current_time),
+                bucketByTime=bucket_hour, startTimeMillis=(current_time),
                 endTimeMillis=(current_time+day))
             fit_data = fit.users().dataset().aggregate(userId='me', 
                 body=json.loads(data_request)).execute()
@@ -170,12 +171,12 @@ class UserFitDataView(View):
             list_by_hours = get_value_from_json_by_hours(json.dumps(fit_data))
             dict_by_hours = { i : list_by_hours[i] for i in range(0, len(list_by_hours)) }
             return JsonResponse(dict_by_hours, status=200)
-        else:
-            data_list = [{"dataTypeName": "com.google.step_count.delta"},
-                        {"dataTypeName": "com.google.distance.delta"},
-                        {"dataTypeName": "com.google.calories.expended"}
-                        ]
-            bucket_dict = { "durationMillis": epochtime.day }
+        elif req_days < 75:
+            # data_list = [{"dataTypeName": "com.google.step_count.delta"},
+            #             {"dataTypeName": "com.google.distance.delta"},
+            #             {"dataTypeName": "com.google.calories.expended"}
+            #             ]
+            # bucket_dict = { "durationMillis": epochtime.day }
 
             data_request = create_json_request(aggregateBy=data_list,
                 bucketByTime=bucket_dict, startTimeMillis=(current_time - epochtime.day*(req_days-1)),
@@ -187,6 +188,25 @@ class UserFitDataView(View):
             Profile.objects.filter(user_id=profile.user_id).update(access_token=credentials.token)
 
             list_by_days = get_value_from_json(json.dumps(fit_data))
+            dict_by_days = { i : list_by_days[i] for i in range(0, len(list_by_days)) }
+            
+            return JsonResponse(dict_by_days, status=200)
+        else:
+            # data_list = [{"dataTypeName": "com.google.step_count.delta"},
+            #             {"dataTypeName": "com.google.distance.delta"},
+            #             {"dataTypeName": "com.google.calories.expended"}
+            #             ]
+            # bucket_dict = { "durationMillis": epochtime.day }
+            list_by_days = []
+            for i in range(5):
+                data_request = create_json_request(aggregateBy=data_list,
+                         bucketByTime=bucket_dict, startTimeMillis=(current_time - (i+1)*epochtime.day*73),
+                         endTimeMillis=(current_time-i*epochtime.day*73))
+                fit_data = fit.users().dataset().aggregate(userId='me', 
+                    body=json.loads(data_request)).execute()
+                Profile.objects.filter(user_id=profile.user_id).update(access_token=credentials.token)
+                list_by_days = get_value_from_json(json.dumps(fit_data)) + list_by_days
+
             dict_by_days = { i : list_by_days[i] for i in range(0, len(list_by_days)) }
             
             return JsonResponse(dict_by_days, status=200)
