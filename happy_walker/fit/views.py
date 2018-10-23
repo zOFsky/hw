@@ -30,7 +30,6 @@ class SaveFitDataView(View):
         current_time = epochtime.date_to_epoch() * 1000
         day = epochtime.day
 
-        
         data_list = [
             {"dataTypeName": "com.google.step_count.delta"},
             {"dataTypeName": "com.google.distance.delta"},
@@ -38,11 +37,10 @@ class SaveFitDataView(View):
             ]
 
         bucket_dict = {"durationMillis": epochtime.day}
-
         
         data_request = create_json_request(aggregateBy=data_list,
             bucketByTime=bucket_dict, startTimeMillis=(current_time-epochtime.day*73),
-            endTimeMillis=(current_time-epochtime.day*73+day))
+            endTimeMillis=(current_time+day))
         fit_data = fit.users().dataset().aggregate(userId='me', 
             body=json.loads(data_request)).execute()
         
