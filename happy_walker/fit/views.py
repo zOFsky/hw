@@ -64,7 +64,7 @@ class SaveFitDataView(View):
                                                 calories=elem["calories"]
                                                 )
 #-----------------------------------------------
-        for i in range(1, 5):
+        for i in range(1, 2):
             data_request = create_json_request(aggregateBy=data_list,
                 bucketByTime=bucket_dict, startTimeMillis=(current_time - (i+1)*epochtime.day*73),
                 endTimeMillis=(current_time-i*epochtime.day*73+day))
