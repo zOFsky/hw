@@ -10,7 +10,7 @@ class FitDataModel(models.Model):
     calories = models.FloatField(default=0)
 
     def __str__(self):
-        return f'{self.user} {self.date} {self.steps}'
+        return f'{self.user.username} {self.date} {self.steps}'
 
     class Meta:
         ordering = ['-user']

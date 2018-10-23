@@ -39,24 +39,22 @@ class SaveFitDataView(View):
 
         bucket_dict = {"durationMillis": epochtime.day}
 
+        
         data_request = create_json_request(aggregateBy=data_list,
-            bucketByTime=bucket_dict, startTimeMillis=(current_time - epochtime.day*50),
-            endTimeMillis=(current_time+day))
-        
-        
+            bucketByTime=bucket_dict, startTimeMillis=(current_time-epochtime.day*73),
+            endTimeMillis=(current_time-epochtime.day*73+day))
         fit_data = fit.users().dataset().aggregate(userId='me', 
             body=json.loads(data_request)).execute()
         
-        Profile.objects.filter(user_id=profile.user_id).update(access_token=credentials.token,
-                                                               refresh_token=credentials.refresh_token)
+        Profile.objects.filter(user_id=profile.user_id).update(access_token=credentials.token)
 
         list_by_days = get_value_from_json(json.dumps(fit_data))
-        dict_by_days = { i : list_by_days[i] for i in range(0, len(list_by_days)) }
+        #dict_by_days = { i : list_by_days[i] for i in range(0, len(list_by_days)) }
         
         user = User.objects.get(username=request.user.username)
         for elem in list_by_days:
             if not(FitDataModel.objects.filter(user=user, 
-                                               date=elem["date"]).exists()):
+                                            date=elem["date"]).exists()):
                 day_data = FitDataModel(user=user, date=elem['date'],
                         steps=elem["steps"], distance=elem["distance"],
                         calories=elem["calories"])
@@ -67,70 +65,37 @@ class SaveFitDataView(View):
                                                 distance=elem["distance"],
                                                 calories=elem["calories"]
                                                 )
+#-----------------------------------------------
+        for i in range(1, 5):
+            data_request = create_json_request(aggregateBy=data_list,
+                bucketByTime=bucket_dict, startTimeMillis=(current_time - (i+1)*epochtime.day*73),
+                endTimeMillis=(current_time-i*epochtime.day*73+day))
+      
+            fit_data = fit.users().dataset().aggregate(userId='me', 
+                body=json.loads(data_request)).execute()
+            
+            list_by_days = get_value_from_json(json.dumps(fit_data))
+         #   dict_by_days = { i : list_by_days[i] for i in range(0, len(list_by_days)) }
+            
+            user = User.objects.get(username=request.user.username)
+            for elem in list_by_days:
+                if not(FitDataModel.objects.filter(user=user, 
+                                                date=elem["date"]).exists()):
+                    day_data = FitDataModel(user=user, date=elem['date'],
+                            steps=elem["steps"], distance=elem["distance"],
+                            calories=elem["calories"])
+                    day_data.save()
+                else:
+                    FitDataModel.objects.filter(user=user,date=elem["date"]).update(
+                                                    steps=elem["steps"], 
+                                                    distance=elem["distance"],
+                                                    calories=elem["calories"]
+                                                    )
         return JsonResponse({
                 'message': f'We saved data in {user.username}'
             }, status=200)
         #return JsonResponse(fit_data)
-        return JsonResponse(dict_by_days)
-
-"""
-class FitDataView(View):
-    def get(self, request):
-        if 'credentials' not in request.session:
-            return redirect('/oauth')
-
-        credentials = request.session['credentials']
-
-        credentials = google.oauth2.credentials.Credentials(
-            token=credentials['token'],
-            refresh_token=credentials['refresh_token'],
-            token_uri=credentials['token_uri'],
-            client_id=credentials['client_id'],
-            client_secret=credentials['client_secret'],
-            scopes=credentials['scopes'])
-
-        fit = googleapiclient.discovery.build(
-            'fitness', 'v1', credentials=credentials)
-
-        
-        current_time = epochtime.date_to_epoch() * 1000
-        week = epochtime.week * 1000
-        day = epochtime.day
-
-        data_list = [{"dataTypeName": "com.google.step_count.delta"},
-                     {"dataTypeName": "com.google.distance.delta"},
-                     {"dataTypeName": "com.google.calories.expended"}
-                    ]
-        bucket_dict = { "durationMillis": epochtime.day }
-
-        data_request = create_json_request(aggregateBy=data_list,
-            bucketByTime=bucket_dict, startTimeMillis=(current_time - epochtime.month),
-            endTimeMillis=(current_time+day))
-
-        fit_data = fit.users().dataset().aggregate(userId='me', 
-            body=json.loads(data_request)).execute()
-        
-        list_by_days = get_value_from_json(json.dumps(fit_data))
-        dict_by_days = { i : list_by_days[i] for i in range(0, len(list_by_days)) 
-                       }
-        user = User.objects.get(username='myusername')
-        for elem in list_by_days:
-            if not(FitDataModel.objects.filter(user=user, 
-                                               date=elem["date"]).exists()):
-                day_data = FitDataModel(user=user, date=elem['date'],
-                        steps=elem["steps"], distance=elem["distance"],
-                        calories=elem["calories"])
-                day_data.save()
-            else:
-                FitDataModel.objects.filter(user=user,date=elem["date"]).update(
-                                                steps=elem["steps"], 
-                                                distance=elem["distance"],
-                                                calories=elem["calories"]
-                                                )
-        return JsonResponse({
-                'message':'We saved data in myusername'
-            }, status=200)
-   """ 
+        #return JsonResponse(dict_by_days)
 
 class TopWalkersView(View):
     def get(self, request, req_days):
@@ -152,32 +117,20 @@ class TopWalkersView(View):
                     .values('first_name', 'last_name', 'total_steps',
                             'total_distance', 'total_calories', 'id') \
                     .order_by('-total_steps'):
-                n=n+1
+            n=n+1
 
-                final_list.append(
-                    {
-                        "id": fit_record['id'],
-                        "position": n,
-                        "first_name": fit_record['first_name'],
-                        "last_name": fit_record['last_name'],
-                        "steps": fit_record['total_steps'],
-                        "distance": fit_record['total_distance'],
-                        "calories": fit_record['total_calories'],
-                        "image": Profile.objects.get(user_id=fit_record['id']).get_image()
-                    }
-                )  
-        # result_list = [
-        #     fit_record for fit_record in FitDataModel.objects \
-        #                         .filter(date__gt=since_data, user__profile__location=user.profile.location) \
-        #                         .prefetch_related('user') \
-        #                         #.values('user__username') \
-        #                         .annotate(Sum('steps'), Sum('distance'), Sum('calories')) \
-        #                         .order_by('-steps__sum').get(id=1)
-        # ]
-        #total_steps = FitDataModel.objects.values('user__first_name').filter(date__gt=since_data).annotate(Sum('steps'))
-        # result = FitDataModel.objects.filter(date__gt=since_data) \
-        #             .annotate(Sum('steps')) \
-        #             .get(id=1)
+            final_list.append(
+                {
+                    "id": fit_record['id'],
+                    "position": n,
+                    "first_name": fit_record['first_name'],
+                    "last_name": fit_record['last_name'],
+                    "steps": fit_record['total_steps'],
+                    "distance": fit_record['total_distance'],
+                    "calories": fit_record['total_calories'],
+                    "image": Profile.objects.get(user_id=fit_record['id']).get_image()
+                }
+            )  
 
         users_data = {
             'top walkers': final_list
@@ -213,8 +166,7 @@ class UserFitDataView(View):
                 endTimeMillis=(current_time+day))
             fit_data = fit.users().dataset().aggregate(userId='me', 
                 body=json.loads(data_request)).execute()
-            Profile.objects.filter(user_id=profile.user_id).update(access_token=credentials.token,
-                                                        refresh_token=credentials.refresh_token)
+            Profile.objects.filter(user_id=profile.user_id).update(access_token=credentials.token)
             list_by_hours = get_value_from_json_by_hours(json.dumps(fit_data))
             dict_by_hours = { i : list_by_hours[i] for i in range(0, len(list_by_hours)) }
             return JsonResponse(dict_by_hours, status=200)
@@ -232,8 +184,7 @@ class UserFitDataView(View):
             fit_data = fit.users().dataset().aggregate(userId='me', 
                 body=json.loads(data_request)).execute()
             
-            Profile.objects.filter(user_id=profile.user_id).update(access_token=credentials.token,
-                                                                refresh_token=credentials.refresh_token)
+            Profile.objects.filter(user_id=profile.user_id).update(access_token=credentials.token)
 
             list_by_days = get_value_from_json(json.dumps(fit_data))
             dict_by_days = { i : list_by_days[i] for i in range(0, len(list_by_days)) }
