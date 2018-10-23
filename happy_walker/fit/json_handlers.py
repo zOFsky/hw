@@ -72,5 +72,6 @@ def get_value_from_json_by_hours(json_string):
                     hour_data["calories"] = dataset_elem["point"][0]["value"][0]["fpVal"]
                 except (IndexError, KeyError):
                     pass
-        result_data_list.append(hour_data)
+        if hour_data["steps"] > 0:
+            result_data_list.append(hour_data)
     return result_data_list
