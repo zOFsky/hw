@@ -3,7 +3,7 @@ Cerberus==1.2
 certifi==2018.8.24
 chardet==3.0.4
 dataclasses==0.6
-Django==2.0.7
+Django==2.2.24
 django-cors-headers==2.4.0
 djongo==1.2.30
 google-api-python-client==1.7.4
